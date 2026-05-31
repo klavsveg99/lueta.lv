@@ -770,10 +770,9 @@ section { padding: 100px 48px; }
 .testimonials-header { text-align: center; margin-bottom: 64px; }
 .testimonials-header .section-desc { margin: 0 auto; }
 .test-grid {
-    display: flex;
-    justify-content: center;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
     gap: 24px;
-    flex-wrap: wrap;
 }
 .test-card {
     background: var(--bg-card);
