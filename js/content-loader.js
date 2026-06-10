@@ -39,8 +39,14 @@
     return fetchJson(api + '/' + table + '?' + q + '&order=' + encodeURIComponent('display_order.asc'));
   }
 
-  // Start fetching immediately
-  var dataPromise = Promise.all([fetchBlocks(), fetchItems('services'), fetchItems('testimonials'), fetchItems('experiences')]);
+  // Start fetching immediately (each failure returns empty defaults)
+  var safe = function (p, def) { return p.catch(function () { return def; }); };
+  var dataPromise = Promise.all([
+    safe(fetchBlocks(), {}),
+    safe(fetchItems('services'), []),
+    safe(fetchItems('testimonials'), []),
+    safe(fetchItems('experiences'), [])
+  ]);
 
   function domReady(fn) {
     if (document.readyState !== 'loading') { fn(); }
