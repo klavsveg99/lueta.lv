@@ -268,20 +268,20 @@ nav a:hover, nav a.active { color: var(--text); }
 }
 
 .hero-img-1 {
-    width: 340px;
-    height: 450px;
-    top: 0;
+    width: 300px;
+    height: 420px;
+    top: 10px;
     left: 0;
     animation: float 7s ease-in-out infinite;
+    z-index: 2;
 }
 
 .hero-img-2 {
-    width: 300px;
-    height: 390px;
-    bottom: 0;
-    right: 0;
+    width: 260px;
+    height: 360px;
+    top: 30px;
+    left: 200px;
     animation: float2 6s ease-in-out 1s infinite;
-    z-index: 2;
 }
 
 .hero-img-container img {
@@ -702,19 +702,19 @@ section { padding: 100px 48px; }
     box-shadow: 0 20px 60px rgba(0,0,0,0.4);
 }
 .missis-img-1 {
-    width: 320px;
-    height: 420px;
+    width: 300px;
+    height: 400px;
     bottom: 0;
     left: 50%;
-    transform: translateX(-270px);
+    transform: translateX(-230px);
     z-index: 2;
 }
 .missis-img-2 {
-    width: 290px;
-    height: 370px;
+    width: 260px;
+    height: 350px;
     bottom: 20px;
-    right: 50%;
-    transform: translateX(230px);
+    left: 50%;
+    transform: translateX(20px);
     z-index: 1;
 }
 .missis-img img,
@@ -1429,11 +1429,11 @@ footer {
     .footer-links a { text-align: center; }
 
     .hero-visual { width: 280px; height: 340px; }
-    .hero-img-1 { width: 180px; height: 240px; }
-    .hero-img-2 { width: 140px; height: 180px; }
+    .hero-img-1 { width: 180px; height: 240px; left: 0; }
+    .hero-img-2 { width: 140px; height: 180px; left: 120px; top: 20px; }
     .missis-images { height: 280px; width: 100%; max-width: 320px; }
-    .missis-img-1 { width: 180px; height: 240px; left: 50%; transform: translateX(-130px) !important; }
-    .missis-img-2 { width: 160px; height: 200px; right: 50%; transform: translateX(130px) !important; top: -25px; }
+    .missis-img-1 { width: 180px; height: 240px; left: 50%; transform: translateX(-150px); }
+    .missis-img-2 { width: 150px; height: 200px; left: 50%; transform: translateX(10px); top: 10px; }
 
     /* NAV MOBILE STYLES */
     nav {
