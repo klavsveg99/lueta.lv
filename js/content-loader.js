@@ -218,6 +218,12 @@
     });
   }
 
+  function observeReveals() {
+    var obs = window.__revealObserver;
+    if (!obs) return;
+    document.querySelectorAll('.reveal:not(.visible)').forEach(function (el) { obs.observe(el); });
+  }
+
   function updateStats() {
     // Re-trigger intersection observers for stat counters
     var counters = document.querySelectorAll('.stat-number[data-cms]');
@@ -235,9 +241,9 @@
 
     domReady(function () {
       if (blocks && Object.keys(blocks).length) applyBlocks(blocks);
-      if (services && services.length) renderServices(services);
-      if (testimonials && testimonials.length) renderTestimonials(testimonials);
-      if (experiences && experiences.length) renderExperiences(experiences);
+      if (services && services.length) { renderServices(services); observeReveals(); }
+      if (testimonials && testimonials.length) { renderTestimonials(testimonials); observeReveals(); }
+      if (experiences && experiences.length) { renderExperiences(experiences); observeReveals(); }
       if (blocks) updateStats();
     });
   }).catch(function (e) { console.warn('CMS load failed:', e); });

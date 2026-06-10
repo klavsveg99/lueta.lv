@@ -153,7 +153,6 @@ initMissisCycling();
 
 // SCROLL ANIMATIONS
 
-const revealElements = document.querySelectorAll('.reveal');
 const observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
         if (entry.isIntersecting) {
@@ -162,7 +161,8 @@ const observer = new IntersectionObserver((entries) => {
         }
     });
 }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
-revealElements.forEach(el => observer.observe(el));
+window.__revealObserver = observer;
+document.querySelectorAll('.reveal').forEach(function (el) { observer.observe(el); });
 
 // COUNTER ANIMATION
 const counters = document.querySelectorAll('.stat-number');
