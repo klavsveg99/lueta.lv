@@ -131,21 +131,22 @@
       });
     }
 
-    // Set hero and missis images from content blocks (slots 1-10)
-    for (var i = 1; i <= 10; i++) {
-      var heroKey = 'hero_img_' + i;
-      if (blocks[heroKey]) {
-        var sel = '.hero-img-' + i + ' img';
-        var img = document.querySelector(sel);
-        if (img) { img.src = blocks[heroKey]; }
-      }
-      var missisKey = 'missis_img_' + i;
-      if (blocks[missisKey]) {
-        var sel = '.missis-img-' + i + ' img';
-        var img = document.querySelector(sel);
-        if (img) { img.src = blocks[missisKey]; }
-      }
+    // Set hero and missis images from JSON gallery arrays
+    function loadGallery(key, sel1, sel2) {
+      if (!blocks[key]) return;
+      try {
+        var paths = JSON.parse(blocks[key]);
+        if (!paths || !paths.length) return;
+        var img1 = document.querySelector(sel1 + ' img');
+        if (img1) img1.src = paths[0];
+        if (paths.length > 1) {
+          var img2 = document.querySelector(sel2 + ' img');
+          if (img2) img2.src = paths[1];
+        }
+      } catch(e) {}
     }
+    loadGallery('hero_images', '.hero-img-1', '.hero-img-2');
+    loadGallery('missis_images', '.missis-img-1', '.missis-img-2');
   }
 
   function renderServices(items) {
