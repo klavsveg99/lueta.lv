@@ -1,7 +1,8 @@
 <?php
-header('Content-Type: application/json');
+header('Content-Type: application/json; charset=utf-8');
 
 require_once __DIR__ . '/vendor/autoload.php';
+require_once __DIR__ . '/app/SupabaseClient.php';
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;
@@ -56,6 +57,27 @@ if (!empty($phone) && !preg_match('/^[0-9+]+$/', $phone)) {
     exit;
 }
 
+$page = $isEnglish ? 'en' : 'index';
+
+// Save to Supabase contact_submissions
+try {
+    $supabase = new \App\SupabaseClient(
+        'https://nyrzjdotaxacvjomthll.supabase.co',
+        'REPLACE_SERVICE_KEY',
+        ''
+    );
+    $supabase->insert('contact_submissions', [
+        'name' => $name,
+        'email' => $email,
+        'phone' => $phone,
+        'brand_name' => $brand_name,
+        'company_description' => $company_description,
+        'page' => $page,
+    ]);
+} catch (Exception $e) {
+    // Supabase save is optional - email will still be sent
+}
+
 $to = 'lueta@lueta.lv';
 $subject = $isEnglish ? 'New message from lueta.lv - ' . $name : 'Jauna ziņa no lueta.lv - ' . $name;
 
@@ -89,9 +111,8 @@ try {
     $mail->Body = $email_content;
     $mail->CharSet = 'UTF-8';
 
-    $result = $mail->send();
+    $mail->send();
     echo json_encode(['success' => true, 'message' => $messages[$lang]['success']]);
 } catch (Exception $e) {
-    $error = $mail->ErrorInfo ?? $e->getMessage();
     echo json_encode(['success' => false, 'message' => $messages[$lang]['error']]);
 }
