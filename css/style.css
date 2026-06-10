@@ -1513,3 +1513,7 @@ grid-template-columns: repeat(2, 1fr);
 }
 }
 
+
+/* Image slideshow */
+.hero-img-container, .missis-img { position: relative; overflow: hidden; }
+.hero-img-container img, .missis-img img { transition: opacity 1s ease-in-out; }
