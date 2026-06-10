@@ -62,7 +62,10 @@
       if (el.dataset.cmsType === 'html') {
         el.innerHTML = val;
       } else if (el.dataset.cmsType === 'list') {
-        el.innerHTML = val.split('\n').filter(Boolean).map(function (item) { return '<li>' + escapeHtml(item) + '</li>'; }).join('');
+        var items;
+        try { items = JSON.parse(val); } catch(e) {}
+        if (!Array.isArray(items)) { items = val.split('\n').filter(Boolean); }
+        el.innerHTML = items.map(function (item) { return '<li>' + escapeHtml(item) + '</li>'; }).join('');
       } else {
         el.textContent = val;
       }
