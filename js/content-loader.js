@@ -109,7 +109,7 @@
     }
     if (blocks['contact_email']) {
       var eEls = document.querySelectorAll('[data-cms="contact_email"]');
-      eEls.forEach(function (e) { e.textContent = blocks['contact_email']; if (e.tagName === 'A') e.href = 'mailto:' + blocks['contact_email']; });
+      eEls.forEach(function (e) { e.innerHTML = '<i class="fa-solid fa-envelope"></i> ' + escapeHtml(blocks['contact_email']); if (e.tagName === 'A') e.href = 'mailto:' + blocks['contact_email']; });
     }
     if (blocks['contact_location']) {
       var lEl = document.querySelector('.contact-link[data-cms="contact_location"]');
