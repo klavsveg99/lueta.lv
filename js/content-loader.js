@@ -131,12 +131,16 @@
       });
     }
 
-    // Set hero and missis images from JSON gallery arrays
-    function loadGallery(key, sel1, sel2) {
+    // Set hero and missis images from JSON gallery arrays (random pick)
+    function loadGalleryRandom(key, sel1, sel2) {
       if (!blocks[key]) return;
       try {
         var paths = JSON.parse(blocks[key]);
         if (!paths || !paths.length) return;
+        for (var i = paths.length - 1; i > 0; i--) {
+          var j = Math.floor(Math.random() * (i + 1));
+          var tmp = paths[i]; paths[i] = paths[j]; paths[j] = tmp;
+        }
         var img1 = document.querySelector(sel1 + ' img');
         if (img1) img1.src = paths[0];
         if (paths.length > 1) {
@@ -145,8 +149,8 @@
         }
       } catch(e) {}
     }
-    loadGallery('hero_images', '.hero-img-1', '.hero-img-2');
-    loadGallery('missis_images', '.missis-img-1', '.missis-img-2');
+    loadGalleryRandom('hero_images', '.hero-img-1', '.hero-img-2');
+    loadGalleryRandom('missis_images', '.missis-img-1', '.missis-img-2');
   }
 
   function renderServices(items) {
