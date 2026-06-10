@@ -130,6 +130,20 @@
         if (a.closest('.contact')) a.href = blocks['contact_linkedin'];
       });
     }
+
+    // Set hero and missis images from content blocks
+    var imgMap = {
+      'hero_img_1': '.hero-img-1 img',
+      'hero_img_2': '.hero-img-2 img',
+      'missis_img_1': '.missis-img-1 img',
+      'missis_img_2': '.missis-img-2 img',
+    };
+    Object.keys(imgMap).forEach(function (key) {
+      if (blocks[key]) {
+        var img = document.querySelector(imgMap[key]);
+        if (img) img.src = blocks[key];
+      }
+    });
   }
 
   function renderServices(items) {
