@@ -155,7 +155,7 @@
 
   function renderServices(items) {
     var grid = document.querySelector('.services-grid');
-    if (!grid) return;
+    if (!grid || !items || !items.length) return;
     grid.innerHTML = '';
     items.forEach(function (item, i) {
       var delay = i % 3 === 0 ? '' : ' reveal-delay-' + (i % 3);
@@ -169,7 +169,7 @@
 
   function renderTestimonials(items) {
     var grid = document.querySelector('.test-grid');
-    if (!grid) return;
+    if (!grid || !items || !items.length) return;
     grid.innerHTML = '';
     items.forEach(function (item, i) {
       var delay = i === 0 ? '' : i === 1 ? ' reveal-delay-1' : ' reveal-delay-2';
@@ -182,7 +182,7 @@
 
   function renderExperiences(items) {
     var grid = document.querySelector('.exp-grid');
-    if (!grid) return;
+    if (!grid || !items || !items.length) return;
     grid.innerHTML = '';
     items.forEach(function (item, i) {
       var delay = i % 2 === 0 ? '' : ' reveal-delay-1';
@@ -215,5 +215,5 @@
       if (experiences && experiences.length) renderExperiences(experiences);
       if (blocks) updateStats();
     });
-  }).catch(function () {});
+  }).catch(function (e) { console.warn('CMS load failed:', e); });
 })();
