@@ -145,14 +145,10 @@
       if (!blocks[key]) return;
       try {
         var paths = JSON.parse(blocks[key]);
-        if (!paths || !paths.length) return;
+        if (!Array.isArray(paths) || !paths.length) return;
         var img1 = document.querySelector(sel1 + ' img');
         var img2 = document.querySelector(sel2 + ' img');
         if (!img1 && !img2) return;
-
-        // Hide fallbacks immediately if CMS images exist
-        if (img1) img1.style.opacity = '0';
-        if (img2) img2.style.opacity = '0';
 
         var deck = [];
         function refillDeck() {
@@ -168,20 +164,41 @@
           if (deck.length < 2) refillDeck();
           var p1 = deck.shift();
           var p2 = deck.shift();
-          if (img1 && p1) {
-            img1.style.opacity = '0';
-            setTimeout(function() { img1.src = p1; img1.style.opacity = '1'; }, 500);
+          if (img1) {
+            if (p1) {
+              img1.style.opacity = '0';
+              setTimeout(function() { img1.src = p1; img1.style.opacity = '1'; }, 500);
+            } else {
+              img1.style.display = 'none';
+            }
           }
-          if (img2 && p2) {
-            img2.style.opacity = '0';
-            setTimeout(function() { img2.src = p2; img2.style.opacity = '1'; }, 500);
-          } else if (img2) {
-            img2.style.display = 'none'; // Hide if no second image available
+          if (img2) {
+            if (p2) {
+              img2.style.opacity = '0';
+              setTimeout(function() { img2.src = p2; img2.style.opacity = '1'; }, 500);
+            } else {
+              img2.style.display = 'none';
+            }
           }
         }
 
         refillDeck();
-        updateImages();
+        // Initial load: set src immediately without transition to hide fallbacks
+        if (img1 && deck.length > 0) {
+          var p1 = deck.shift();
+          img1.src = p1;
+          img1.style.opacity = '1';
+        }
+        if (img2 && deck.length > 0) {
+          var p2 = deck.shift();
+          img2.src = p2;
+          img2.style.opacity = '1';
+        }
+        if (img2 && (!deck.length || (paths.length < 2))) {
+           // Handle case where there is only 1 image total
+           if (paths.length < 2) img2.style.display = 'none';
+        }
+
         setInterval(updateImages, 4000);
       } catch(e) { console.warn('Slideshow error for ' + key + ':', e); }
     }
