@@ -167,11 +167,6 @@
           if (img1) {
             if (p1) {
               img1.style.opacity = '0';
-              img1.onerror = function() {
-                this.src = 'media/lueta-1.jpg';
-                this.style.opacity = '1';
-                this.onerror = null;
-              };
               setTimeout(function() { img1.src = p1; img1.style.opacity = '1'; }, 500);
             } else {
               img1.style.display = 'none';
@@ -180,11 +175,6 @@
           if (img2) {
             if (p2) {
               img2.style.opacity = '0';
-              img2.onerror = function() {
-                this.src = 'media/lueta-3.jpg';
-                this.style.opacity = '1';
-                this.onerror = null;
-              };
               setTimeout(function() { img2.src = p2; img2.style.opacity = '1'; }, 500);
             } else {
               img2.style.display = 'none';
