@@ -212,7 +212,6 @@
         setInterval(updateImages, 4000);
       } catch(e) { console.warn('Slideshow error for ' + key + ':', e); }
     }
-    }
     startSlideshow('hero_images', '.hero-img-1', '.hero-img-2');
     startSlideshow('missis_images', '.missis-img-1', '.missis-img-2');
   }
