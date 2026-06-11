@@ -85,6 +85,7 @@
         var items;
         try { items = JSON.parse(val); } catch(e) {}
         if (!Array.isArray(items)) { items = val.split('\n').filter(Boolean); }
+        if (items.length === 0) return;
         el.innerHTML = items.map(function (item) { return '<li>' + escapeHtml(item) + '</li>'; }).join('');
       } else {
         el.textContent = val;
