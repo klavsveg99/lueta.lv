@@ -76,7 +76,7 @@
   function applyBlocks(blocks) {
     Object.keys(blocks).forEach(function (key) {
       var val = blocks[key];
-      if (val == null) return;
+      if (val == null || val === '') return;
       var el = document.querySelector('[data-cms="' + key + '"]');
       if (!el) return;
       if (el.dataset.cmsType === 'html') {
