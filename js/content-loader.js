@@ -158,9 +158,15 @@
           return shuffled.slice(0, count);
         }
         var current = pickRandom(paths, Math.min(2, paths.length));
-        if (img1 && current[0]) img1.src = current[0];
-        if (img2 && current[1]) img2.src = current[1];
-        if (paths.length <= 2) return;
+        if (img1 && current[0]) {
+          img1.style.opacity = '0';
+          setTimeout(function() { img1.src = current[0]; img1.style.opacity = '1'; }, 100);
+        }
+        if (img2 && current[1]) {
+          img2.style.opacity = '0';
+          setTimeout(function() { img2.src = current[1]; img2.style.opacity = '1'; }, 100);
+        }
+        if (paths.length === 0) return;
         setInterval(function() {
           var newPick = pickRandom(paths, Math.min(2, paths.length));
           if (img1 && newPick[0]) {
