@@ -146,8 +146,10 @@
       try {
         var paths = JSON.parse(blocks[key]);
         if (!Array.isArray(paths) || !paths.length) return;
-        var img1 = document.querySelector(sel1 + ' img');
-        var img2 = document.querySelector(sel2 + ' img');
+        var container1 = document.querySelector(sel1);
+        var container2 = document.querySelector(sel2);
+        var img1 = container1 ? container1.querySelector('img') : null;
+        var img2 = container2 ? container2.querySelector('img') : null;
         if (!img1 && !img2) return;
 
         var deck = [];
@@ -169,21 +171,21 @@
               img1.style.opacity = '0';
               setTimeout(function() { img1.src = p1; img1.style.opacity = '1'; }, 500);
             } else {
-              img1.style.display = 'none';
+              if (container1) container1.style.display = 'none';
             }
           }
           if (img2) {
             if (p2) {
+              if (container2) container2.style.display = 'block';
               img2.style.opacity = '0';
               setTimeout(function() { img2.src = p2; img2.style.opacity = '1'; }, 500);
             } else {
-              img2.style.display = 'none';
+              if (container2) container2.style.display = 'none';
             }
           }
         }
 
         refillDeck();
-        // Initial load: set src immediately without transition to hide fallbacks
         if (img1 && deck.length > 0) {
           var p1 = deck.shift();
           img1.src = p1;
@@ -193,10 +195,8 @@
           var p2 = deck.shift();
           img2.src = p2;
           img2.style.opacity = '1';
-        }
-        if (img2 && (!deck.length || (paths.length < 2))) {
-           // Handle case where there is only 1 image total
-           if (paths.length < 2) img2.style.display = 'none';
+        } else if (img2) {
+          if (container2) container2.style.display = 'none';
         }
 
         setInterval(updateImages, 4000);
