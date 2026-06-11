@@ -149,36 +149,42 @@
         var img1 = document.querySelector(sel1 + ' img');
         var img2 = document.querySelector(sel2 + ' img');
         if (!img1 && !img2) return;
-        function pickRandom(arr, count) {
-          var shuffled = arr.slice();
+
+        // Hide fallbacks immediately if CMS images exist
+        if (img1) img1.style.opacity = '0';
+        if (img2) img2.style.opacity = '0';
+
+        var deck = [];
+        function refillDeck() {
+          var shuffled = paths.slice();
           for (var i = shuffled.length - 1; i > 0; i--) {
             var j = Math.floor(Math.random() * (i + 1));
             var tmp = shuffled[i]; shuffled[i] = shuffled[j]; shuffled[j] = tmp;
           }
-          return shuffled.slice(0, count);
+          deck = shuffled;
         }
-        var current = pickRandom(paths, Math.min(2, paths.length));
-        if (img1 && current[0]) {
-          img1.style.opacity = '0';
-          setTimeout(function() { img1.src = current[0]; img1.style.opacity = '1'; }, 100);
-        }
-        if (img2 && current[1]) {
-          img2.style.opacity = '0';
-          setTimeout(function() { img2.src = current[1]; img2.style.opacity = '1'; }, 100);
-        }
-        if (paths.length === 0) return;
-        setInterval(function() {
-          var newPick = pickRandom(paths, Math.min(2, paths.length));
-          if (img1 && newPick[0]) {
+
+        function updateImages() {
+          if (deck.length < 2) refillDeck();
+          var p1 = deck.shift();
+          var p2 = deck.shift();
+          if (img1 && p1) {
             img1.style.opacity = '0';
-            setTimeout(function() { img1.src = newPick[0]; img1.style.opacity = '1'; }, 500);
+            setTimeout(function() { img1.src = p1; img1.style.opacity = '1'; }, 500);
           }
-          if (img2 && newPick[1]) {
+          if (img2 && p2) {
             img2.style.opacity = '0';
-            setTimeout(function() { img2.src = newPick[1]; img2.style.opacity = '1'; }, 500);
+            setTimeout(function() { img2.src = p2; img2.style.opacity = '1'; }, 500);
+          } else if (img2) {
+            img2.style.display = 'none'; // Hide if no second image available
           }
-        }, 4000);
-      } catch(e) {}
+        }
+
+        refillDeck();
+        updateImages();
+        setInterval(updateImages, 4000);
+      } catch(e) { console.warn('Slideshow error for ' + key + ':', e); }
+    }
     }
     startSlideshow('hero_images', '.hero-img-1', '.hero-img-2');
     startSlideshow('missis_images', '.missis-img-1', '.missis-img-2');
