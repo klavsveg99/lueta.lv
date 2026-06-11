@@ -34,6 +34,19 @@
     });
   }
 
+  function fetchGlobalImages() {
+    var q = 'page=eq.index';
+    return fetchJson(api + '/content_blocks?' + q + '&select=block_key,block_value').then(function (rows) {
+      var map = {};
+      rows.forEach(function (r) {
+        if (r.block_key === 'hero_images' || r.block_key === 'missis_images') {
+          map[r.block_key] = r.block_value;
+        }
+      });
+      return map;
+    });
+  }
+
   function fetchItems(table) {
     var q = encodeURIComponent('page') + '=eq.' + encodeURIComponent(page);
     return fetchJson(api + '/' + table + '?' + q + '&order=' + encodeURIComponent('display_order.asc'));
@@ -45,7 +58,8 @@
     safe(fetchBlocks(), {}),
     safe(fetchItems('services'), []),
     safe(fetchItems('testimonials'), []),
-    safe(fetchItems('experiences'), [])
+    safe(fetchItems('experiences'), []),
+    safe(fetchGlobalImages(), {})
   ]);
 
   function domReady(fn) {
@@ -266,6 +280,12 @@
     var services = results[1];
     var testimonials = results[2];
     var experiences = results[3];
+    var globalImages = results[4];
+
+    // Merge global images into blocks so they're available for the slideshow
+    if (globalImages) {
+      Object.assign(blocks, globalImages);
+    }
 
     domReady(function () {
       if (blocks && Object.keys(blocks).length) applyBlocks(blocks);
