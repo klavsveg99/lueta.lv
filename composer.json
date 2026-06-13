@@ -1,0 +1,12 @@
+{
+    "name": "lueta/lueta-lv",
+    "description": "Lueta.lv - Brand Manager Landing Page",
+    "require": {
+        "phpmailer/phpmailer": "^7.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/"
+        }
+    }
+}
