@@ -338,20 +338,30 @@ $page_title = 'Satura redaktors';
                                 }
                             }
                             if (empty($stats)) {
-                                $stats = array(
-                                    array('count' => '10', 'label' => 'Gadu pieredze'),
-                                    array('count' => '50', 'label' => 'Vadīti zīmoli'),
-                                    array('count' => '100', 'label' => 'Pabeigti projekti'),
-                                );
+                                if ($lang === 'en') {
+                                    $stats = array(
+                                        array('count' => '10', 'label' => 'Years Experience'),
+                                        array('count' => '50', 'label' => 'Brands Led'),
+                                        array('count' => '100', 'label' => 'Projects Delivered'),
+                                    );
+                                } else {
+                                    $stats = array(
+                                        array('count' => '10', 'label' => 'Gadu pieredze'),
+                                        array('count' => '50', 'label' => 'Vadīti zīmoli'),
+                                        array('count' => '100', 'label' => 'Pabeigti projekti'),
+                                    );
+                                }
                             }
+                            $statCountPh = $lang === 'en' ? 'Number' : 'Skaitlis';
+                            $statLabelPh = $lang === 'en' ? 'Title' : 'Nosaukums';
                             ?>
                             <div class="form-group">
                                 <label><?= htmlspecialchars($def['label']) ?></label>
                                 <div id="stats-container">
                                     <?php foreach ($stats as $idx => $s): ?>
                                         <div class="dynamic-row" style="display:flex;gap:8px;margin-bottom:8px;align-items:center">
-                                            <input type="number" name="stats[<?= $idx ?>][count]" value="<?= htmlspecialchars($s['count']) ?>" placeholder="Skaitlis" style="width:120px">
-                                            <input type="text" name="stats[<?= $idx ?>][label]" value="<?= htmlspecialchars($s['label']) ?>" placeholder="Nosaukums" style="flex:1">
+                                            <input type="number" name="stats[<?= $idx ?>][count]" value="<?= htmlspecialchars($s['count']) ?>" placeholder="<?= $statCountPh ?>" style="width:120px">
+                                            <input type="text" name="stats[<?= $idx ?>][label]" value="<?= htmlspecialchars($s['label']) ?>" placeholder="<?= $statLabelPh ?>" style="flex:1">
                                             <button type="button" class="btn btn-danger btn-sm remove-row"><i class="fa-solid fa-trash"></i></button>
                                         </div>
                                     <?php endforeach; ?>
@@ -363,7 +373,7 @@ $page_title = 'Satura redaktors';
                             $listItems = json_decode($blocks[$key]['block_value'] ?? '[]', true);
                             if (!is_array($listItems)) $listItems = array();
                             if (empty($listItems)) $listItems = array('');
-                            $ph = $def['placeholder'] ?? '';
+                            $ph = $def['placeholder_' . $lang] ?? $def['placeholder'] ?? '';
                             ?>
                             <div class="form-group">
                                 <label><?= htmlspecialchars($def['label']) ?></label>
@@ -380,7 +390,7 @@ $page_title = 'Satura redaktors';
                         <?php else: ?>
                             <?php
                             $current = $blocks[$key]['block_value'] ?? '';
-                            $ph = $def['placeholder'] ?? '';
+                            $ph = $def['placeholder_' . $lang] ?? $def['placeholder'] ?? '';
                             ?>
                             <div class="form-group">
                                 <label for="<?= $key ?>"><?= htmlspecialchars($def['label']) ?></label>
@@ -462,6 +472,9 @@ $page_title = 'Satura redaktors';
 </div>
 
 <script>
+var currentLang = '<?= $lang ?>';
+var statCountPh = currentLang === 'en' ? 'Number' : 'Skaitlis';
+var statLabelPh = currentLang === 'en' ? 'Title' : 'Nosaukums';
 function deleteImage(section, idx) {
     if (!confirm('Vai tiešām dzēst šo attēlu?')) return;
     var form = new FormData();
@@ -537,8 +550,8 @@ document.addEventListener('DOMContentLoaded', function() {
             var row = document.createElement('div');
             row.className = 'dynamic-row';
             row.style.cssText = 'display:flex;gap:8px;margin-bottom:8px;align-items:center';
-            row.innerHTML = '<input type="number" name="stats[' + idx + '][count]" placeholder="Skaitlis" style="width:120px">' +
-                '<input type="text" name="stats[' + idx + '][label]" placeholder="Nosaukums" style="flex:1">' +
+            row.innerHTML = '<input type="number" name="stats[' + idx + '][count]" placeholder="' + statCountPh + '" style="width:120px">' +
+                '<input type="text" name="stats[' + idx + '][label]" placeholder="' + statLabelPh + '" style="flex:1">' +
                 '<button type="button" class="btn btn-danger btn-sm remove-row"><i class="fa-solid fa-trash"></i></button>';
             container.appendChild(row);
             bindRemoveButtons();
