@@ -143,10 +143,30 @@ $page_title = ($lang === 'en') ? 'Experience (EN)' : 'Pieredze (LV)';
                 <div class="card"><p class="text-muted">Nav pieredzes ierakstu. Vispirms izveidojiet tos datu bāzē.</p></div>
             <?php endif; ?>
             <div class="form-actions" style="display:flex;gap:8px;flex-wrap:wrap">
-                <button type="submit" name="action" value="save" class="btn btn-primary"><i class="fa-solid fa-check"></i> Saglabāt visu</button>
-                <button type="submit" name="action" value="add" class="btn btn-outline"><i class="fa-solid fa-plus"></i> Pievienot pieredzi</button>
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-check"></i> Saglabāt visu</button>
             </div>
         </form>
+        <div class="inline-form" style="margin:0 var(--page-padding) 16px">
+            <form method="POST" style="display:flex;flex-direction:column;gap:12px">
+                <input type="hidden" name="lang" value="<?= $lang ?>">
+                <input type="hidden" name="action" value="add">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Jauna pieredze - Ikonka</label>
+                        <input type="text" name="icon" placeholder="fa-solid fa-award">
+                    </div>
+                    <div class="form-group" style="flex:2">
+                        <label>Nosaukums</label>
+                        <input type="text" name="title" placeholder="Pieredzes nosaukums" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Apraksts</label>
+                    <textarea name="description" rows="3" placeholder="Pieredzes apraksts"></textarea>
+                </div>
+                <div><button type="submit" class="btn btn-outline"><i class="fa-solid fa-plus"></i> Pievienot pieredzi</button></div>
+            </form>
+        </div>
     </main>
 </div>
 <script src="js/admin.js?v=<?= filemtime(__DIR__ . '/js/admin.js') ?>"></script>

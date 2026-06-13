@@ -119,10 +119,30 @@ $page_title = ($lang === 'en') ? 'Testimonials (EN)' : 'Atsauksmes (LV)';
                 <div class="card"><p class="text-muted">Nav atsauksmju. Vispirms izveidojiet tās datu bāzē.</p></div>
             <?php endif; ?>
             <div class="form-actions" style="display:flex;gap:8px;flex-wrap:wrap">
-                <button type="submit" name="action" value="save" class="btn btn-primary"><i class="fa-solid fa-check"></i> Saglabāt visu</button>
-                <button type="submit" name="action" value="add" class="btn btn-outline"><i class="fa-solid fa-plus"></i> Pievienot atsauksmi</button>
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-check"></i> Saglabāt visu</button>
             </div>
         </form>
+        <div class="inline-form" style="margin:0 var(--page-padding) 16px">
+            <form method="POST" style="display:flex;flex-direction:column;gap:12px">
+                <input type="hidden" name="lang" value="<?= $lang ?>">
+                <input type="hidden" name="action" value="add">
+                <div class="form-group">
+                    <label>Jauna atsauksme - Teksts</label>
+                    <textarea name="text" rows="3" placeholder="Atsauksmes teksts" required></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Autors</label>
+                        <input type="text" name="author_name" placeholder="Vārds Uzvārds">
+                    </div>
+                    <div class="form-group">
+                        <label>Amats</label>
+                        <input type="text" name="author_role" placeholder="Amats">
+                    </div>
+                </div>
+                <div><button type="submit" class="btn btn-outline"><i class="fa-solid fa-plus"></i> Pievienot atsauksmi</button></div>
+            </form>
+        </div>
     </main>
 </div>
 <script src="js/admin.js?v=<?= filemtime(__DIR__ . '/js/admin.js') ?>"></script>
