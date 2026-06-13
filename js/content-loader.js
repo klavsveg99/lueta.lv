@@ -210,18 +210,19 @@
           if (imgEl.src.indexOf(newSrc) !== -1 && imgEl.style.opacity === '1') { if (cb) cb(); return; }
           imgEl.style.transition = 'none';
           imgEl.style.opacity = '0';
-          void imgEl.offsetWidth;
-          imgEl.src = newSrc;
-          imgEl.offsetHeight;
-          imgEl.style.transition = 'opacity 1s ease-in-out';
-          void imgEl.offsetWidth;
-          imgEl.style.opacity = '1';
-          var onDone = function() {
-            imgEl.removeEventListener('transitionend', onDone);
-            if (cb) cb();
-          };
-          imgEl.addEventListener('transitionend', onDone);
-          setTimeout(onDone, 1200);
+          requestAnimationFrame(function() {
+            requestAnimationFrame(function() {
+              imgEl.src = newSrc;
+              imgEl.style.transition = 'opacity 1s ease-in-out';
+              imgEl.style.opacity = '1';
+              var onDone = function() {
+                imgEl.removeEventListener('transitionend', onDone);
+                if (cb) cb();
+              };
+              imgEl.addEventListener('transitionend', onDone);
+              setTimeout(onDone, 1200);
+            });
+          });
         }
 
         var pending = paths.length;
