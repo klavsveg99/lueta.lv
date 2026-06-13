@@ -200,7 +200,7 @@
           if (img1) {
             if (p1) {
               img1.style.opacity = '0';
-              setTimeout(function() { img1.src = p1; img1.style.opacity = '1'; }, 500);
+              setTimeout(function() { img1.src = p1; img1.style.opacity = '1'; }, 1000);
             } else {
               if (container1) container1.style.display = 'none';
             }
@@ -209,7 +209,7 @@
             if (p2) {
               if (container2) container2.style.display = 'block';
               img2.style.opacity = '0';
-              setTimeout(function() { img2.src = p2; img2.style.opacity = '1'; }, 500);
+              setTimeout(function() { img2.src = p2; img2.style.opacity = '1'; }, 1000);
             } else {
               if (container2) container2.style.display = 'none';
             }
