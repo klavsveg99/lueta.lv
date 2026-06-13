@@ -444,6 +444,13 @@ $page_title = 'Satura redaktors';
                         </div>
                     <?php endforeach; ?>
                 </div>
+                <div class="form-row" style="margin-top:12px">
+                    <div class="form-group" style="flex:1">
+                        <label>Hero attēli - Augšupielādēt</label>
+                        <input type="file" id="heroFileInput" accept="image/*" multiple>
+                    </div>
+                    <button type="button" class="btn btn-primary btn-sm" id="heroUploadBtn"><i class="fa-solid fa-upload"></i> Augšupielādēt</button>
+                </div>
             </div>
             <div class="card">
                 <h2><i class="fa-solid fa-images"></i> Papildus info attēli</h2>
@@ -455,6 +462,13 @@ $page_title = 'Satura redaktors';
                         </div>
                     <?php endforeach; ?>
                 </div>
+                <div class="form-row" style="margin-top:12px">
+                    <div class="form-group" style="flex:1">
+                        <label>Papildus info attēli - Augšupielādēt</label>
+                        <input type="file" id="missisFileInput" accept="image/*" multiple>
+                    </div>
+                    <button type="button" class="btn btn-primary btn-sm" id="missisUploadBtn"><i class="fa-solid fa-upload"></i> Augšupielādēt</button>
+                </div>
             </div>
             <?php endif; ?>
 
@@ -462,37 +476,6 @@ $page_title = 'Satura redaktors';
                 <button type="submit" class="btn btn-primary"><i class="fa-solid fa-check"></i> Saglabāt visu</button>
             </div>
         </form>
-
-        <?php if ($section_filter === 'all' || $section_filter === 'images'): ?>
-        <div class="page-content" style="margin-top:16px">
-            <div class="card">
-                <form id="heroUploadForm" enctype="multipart/form-data">
-                    <input type="hidden" name="lang" value="<?= $lang ?>">
-                    <input type="hidden" name="section" value="hero">
-                    <div class="form-row">
-                        <div class="form-group" style="flex:1">
-                            <label>Hero attēli - Augšupielādēt</label>
-                            <input type="file" name="image" accept="image/*" required multiple>
-                        </div>
-                        <button type="submit" class="btn btn-primary btn-sm"><i class="fa-solid fa-upload"></i> Augšupielādēt</button>
-                    </div>
-                </form>
-            </div>
-            <div class="card">
-                <form id="missisUploadForm" enctype="multipart/form-data">
-                    <input type="hidden" name="lang" value="<?= $lang ?>">
-                    <input type="hidden" name="section" value="missis">
-                    <div class="form-row">
-                        <div class="form-group" style="flex:1">
-                            <label>Papildus info attēli - Augšupielādēt</label>
-                            <input type="file" name="image" accept="image/*" required multiple>
-                        </div>
-                        <button type="submit" class="btn btn-primary btn-sm"><i class="fa-solid fa-upload"></i> Augšupielādēt</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-        <?php endif; ?>
 
     </main>
 </div>
@@ -511,11 +494,18 @@ function deleteImage(section, idx) {
     fetch('content.php', { method: 'POST', body: form })
         .then(function() { location.reload(); });
 }
-document.querySelectorAll('[id$="UploadForm"]').forEach(function(form) {
-    form.addEventListener('submit', function(e) {
-        e.preventDefault();
-        var fd = new FormData(this);
+document.querySelectorAll('[id$="UploadBtn"]').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+        var section = this.id === 'heroUploadBtn' ? 'hero' : 'missis';
+        var fileInput = document.getElementById(section + 'FileInput');
+        if (!fileInput || !fileInput.files.length) return;
+        var fd = new FormData();
         fd.append('action', 'upload_image');
+        fd.append('section', section);
+        fd.append('lang', '<?= $lang ?>');
+        for (var i = 0; i < fileInput.files.length; i++) {
+            fd.append('image[]', fileInput.files[i]);
+        }
         fetch('content.php', { method: 'POST', body: fd })
             .then(function() { location.reload(); });
     });
