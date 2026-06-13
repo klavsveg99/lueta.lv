@@ -37,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'reset
         $files = glob($uploadDir . '/missis-*.*');
         foreach ($files as $file) unlink($file);
     }
-    // Re-insert default content for services, testimonials, experiences
+    // Re-insert default content for services, testimonials, experiences (LV + EN)
     $defaultServices = array(
         array('page' => 'index', 'title' => 'Zīmola mārketings', 'description' => 'Veidoju zīmola identitāti, pozicionēšanu un balsi, kas emocionāli saista ar jūsu auditoriju un atšķir tirgū.', 'display_order' => 0),
         array('page' => 'index', 'title' => 'Efektivitātes mārketings', 'description' => 'Izstrādāju datu virzītas kampaņas, kas nodrošina mērāmu ROI digitālajos kanālos - maksas sludinājumus, retargetingu un konversiju optimizāciju.', 'display_order' => 1),
@@ -49,18 +49,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'reset
         array('page' => 'index', 'title' => 'Digitālais mārketings', 'description' => 'Nodrošinu holistisku digitālo klātbūtni - SEO, satura mārketingu, e-pasta kampaņas un analītikas virzītu optimizāciju.', 'display_order' => 7),
         array('page' => 'index', 'title' => 'Zīmola konsultācijas', 'description' => 'Sniedzu stratēģiskas konsultācijas zīmola izaicinājumiem - auditus, konkurentu analīzi un rīcībspējīgas rekomendācijas izaugsmei.', 'display_order' => 8),
     );
-    foreach ($defaultServices as $s) {
-        $supabase->insert('services', $s);
-    }
+    $defaultServicesEn = array(
+        array('page' => 'en', 'title' => 'Brand Marketing', 'description' => 'Building brand identity, positioning, and voice that emotionally connects with your audience and stands out in the market.', 'display_order' => 0),
+        array('page' => 'en', 'title' => 'Performance Marketing', 'description' => 'Developing data-driven campaigns that deliver measurable ROI across digital channels - paid ads, retargeting, and conversion optimization.', 'display_order' => 1),
+        array('page' => 'en', 'title' => 'Product Marketing', 'description' => 'Crafting go-to-market strategies for products - messaging frameworks, launch plans, and sales enablement materials.', 'display_order' => 2),
+        array('page' => 'en', 'title' => 'Marketing Strategy', 'description' => 'Creating comprehensive marketing roadmaps aligned with business goals - channel selection, budget allocation, and growth frameworks.', 'display_order' => 3),
+        array('page' => 'en', 'title' => 'Social Media Marketing', 'description' => 'Developing content strategies and community management that builds engaged audiences and drives brand advocacy.', 'display_order' => 4),
+        array('page' => 'en', 'title' => 'Brand Design', 'description' => 'Building visual identity systems - logos, guidelines, and material design - ensuring consistency at every touchpoint.', 'display_order' => 5),
+        array('page' => 'en', 'title' => 'Event Marketing', 'description' => 'Conceptualizing and executing events end-to-end - from launches to corporate experiences and brand activations.', 'display_order' => 6),
+        array('page' => 'en', 'title' => 'Digital Marketing', 'description' => 'Delivering a holistic digital presence - SEO, content marketing, email campaigns, and analytics-driven optimization.', 'display_order' => 7),
+        array('page' => 'en', 'title' => 'Brand Consulting', 'description' => 'Providing strategic consulting for brand challenges - audits, competitor analysis, and actionable recommendations for growth.', 'display_order' => 8),
+    );
+    foreach ($defaultServices as $s) { $supabase->insert('services', $s); }
+    foreach ($defaultServicesEn as $s) { $supabase->insert('services', $s); }
 
     $defaultTestimonials = array(
         array('page' => 'index', 'text' => 'Sadarbība ar Luetu bija patīkama, komunikācija vienkārša un projekts noritēja gludi. Termiņi tika ievēroti, un viņas profesionālā pieeja bija patiesi iedvesmojoša.', 'author_name' => 'Roberts Kalķis', 'author_role' => 'Projektu vadītājs, Diamond Group', 'display_order' => 0),
         array('page' => 'index', 'text' => 'Strādājot ar Luetu pie sociālo tīklu dizaina un vizuālās stratēģijas, saņēmu iedvesmojošu, radošu un profesionālu sadarbību, kas radīja mūsdienīgu un autentisku dizainu.', 'author_name' => 'Anastasija Ivanova', 'author_role' => 'UI/UX, Grafiskais un Web dizains', 'display_order' => 1),
         array('page' => 'index', 'text' => 'Strādājot ar Luetu Misis Latvija projektā bija viegli un patīkami. Viņa ir cilvēku cilvēks - uzklausa un atbalsta. Kopā filmējām video, un tā bija neaizmirstama pieredze. Satikt tik sirsnīgu cilvēku bija patīkams pārsteigums!', 'author_name' => 'Ulla Perkune', 'author_role' => 'Fotogrāfe/videogrāfe', 'display_order' => 2),
     );
-    foreach ($defaultTestimonials as $t) {
-        $supabase->insert('testimonials', $t);
-    }
+    $defaultTestimonialsEn = array(
+        array('page' => 'en', 'text' => 'Working with Lueta was a pleasure. Communication was simple and the project ran smoothly. Deadlines were met, and her professional approach was truly inspiring.', 'author_name' => 'Roberts Kalķis', 'author_role' => 'Project Manager, Diamond Group', 'display_order' => 0),
+        array('page' => 'en', 'text' => 'Collaborating with Lueta on social media design and visual strategy delivered an inspiring, creative, and professional partnership that produced a modern and authentic design.', 'author_name' => 'Anastasija Ivanova', 'author_role' => 'UI/UX, Graphic & Web Design', 'display_order' => 1),
+        array('page' => 'en', 'text' => 'Working with Lueta on the Miss Latvia project was easy and enjoyable. She is a people person - she listens and supports. We filmed a video together, and it was an unforgettable experience. Meeting such a warm person was a wonderful surprise!', 'author_name' => 'Ulla Perkune', 'author_role' => 'Photographer/Videographer', 'display_order' => 2),
+    );
+    foreach ($defaultTestimonials as $t) { $supabase->insert('testimonials', $t); }
+    foreach ($defaultTestimonialsEn as $t) { $supabase->insert('testimonials', $t); }
 
     $defaultExperiences = array(
         array('page' => 'index', 'icon' => 'fa-solid fa-layer-group', 'title' => 'Zīmolu vadība', 'description' => 'Attīstu pilnu zīmola identitāti, pozicionēšanas stratēģiju un ilgtermiņa zīmola kapitālu B2B un B2C sektoros.', 'display_order' => 0),
@@ -70,9 +84,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'reset
         array('page' => 'index', 'icon' => 'fa-solid fa-code-branch', 'title' => 'Multi-kreatora kampaņas', 'description' => 'Orķestrēju reklāmas starp vairākiem kreatoriem un kanāliem - nodrošinot zīmola konsekvenci un maksimālu ietekmi.', 'display_order' => 4),
         array('page' => 'index', 'icon' => 'fa-solid fa-bolt', 'title' => 'Uzņēmējdarbība', 'description' => 'Veidoju un mērogoju uzņēmumus ar fokusu uz ilgtspējīgiem zīmola pamatiem, tirgus atšķirību un ilgtermiņa vērtības radīšanu.', 'display_order' => 5),
     );
-    foreach ($defaultExperiences as $e) {
-        $supabase->insert('experiences', $e);
-    }
+    $defaultExperiencesEn = array(
+        array('page' => 'en', 'icon' => 'fa-solid fa-layer-group', 'title' => 'Brand Management', 'description' => 'Developing full brand identity, positioning strategy, and long-term brand equity across B2B and B2C sectors.', 'display_order' => 0),
+        array('page' => 'en', 'icon' => 'fa-solid fa-microphone-lines', 'title' => 'Corporate Communication', 'description' => 'Crafting internal and external messaging frameworks that align stakeholders and strengthen organizational reputation.', 'display_order' => 1),
+        array('page' => 'en', 'icon' => 'fa-solid fa-rocket', 'title' => 'Product Development', 'description' => 'Leading cross-functional teams from concept to market launch - managing timelines, budgets, and stakeholder alignment.', 'display_order' => 2),
+        array('page' => 'en', 'icon' => 'fa-solid fa-bullhorn', 'title' => 'Sales Activation', 'description' => 'Developing campaign strategies that bridge marketing and sales - driving qualified leads and optimizing conversions.', 'display_order' => 3),
+        array('page' => 'en', 'icon' => 'fa-solid fa-code-branch', 'title' => 'Multi-Creator Campaigns', 'description' => 'Orchestrating campaigns across multiple creators and channels - ensuring brand consistency and maximum impact.', 'display_order' => 4),
+        array('page' => 'en', 'icon' => 'fa-solid fa-bolt', 'title' => 'Entrepreneurship', 'description' => 'Building and scaling businesses with a focus on sustainable brand foundations, market differentiation, and long-term value creation.', 'display_order' => 5),
+    );
+    foreach ($defaultExperiences as $e) { $supabase->insert('experiences', $e); }
+    foreach ($defaultExperiencesEn as $e) { $supabase->insert('experiences', $e); }
 
     // Re-insert default content for about_list (saraksts)
     $defaultAboutList = array(
@@ -270,7 +291,7 @@ $page_title = 'Satura redaktors';
         <div class="modal-overlay" id="resetModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1000;align-items:center;justify-content:center">
             <div class="modal-card" style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:24px;max-width:400px;width:90%">
                 <h2 style="color:var(--danger);margin-bottom:12px"><i class="fa-solid fa-triangle-exclamation"></i> Apstiprināt atiestatīšanu</h2>
-                <p style="color:var(--text-muted);margin-bottom:20px">Šī darbība nevar tikt atcelta. Tiks izdzēsti <strong>visi satura ieraksti</b> (abi valodas) un <strong>visi augšupielādētie attēli</b>.</p>
+                <p style="color:var(--text-muted);margin-bottom:20px">Šī darbība nevar tikt atcelta. Tiks izdzēsti <strong>visi satura ieraksti</strong> (abi valodas) un <strong>visi augšupielādētie attēli</strong>.</p>
                 <form method="POST" style="display:flex;gap:12px;justify-content:flex-end">
                     <input type="hidden" name="action" value="reset_all">
                     <input type="hidden" name="confirm" value="yes">
@@ -470,8 +491,6 @@ $page_title = 'Satura redaktors';
                     </div>
                 </form>
             </div>
-        </div>
-        <?php endif; ?>
         </div>
         <?php endif; ?>
 
