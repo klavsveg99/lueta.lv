@@ -101,7 +101,6 @@ $page_title = ($lang === 'en') ? 'Experience (EN)' : 'Pieredze (LV)';
         </div>
         <form method="POST" class="content-form">
             <input type="hidden" name="lang" value="<?= $lang ?>">
-            <input type="hidden" name="action" value="save">
             <div id="sortable-experience">
             <?php foreach ($items as $i => $item): ?>
                 <div class="card" data-id="<?= $item['id'] ?>">
@@ -144,7 +143,7 @@ $page_title = ($lang === 'en') ? 'Experience (EN)' : 'Pieredze (LV)';
                 <div class="card"><p class="text-muted">Nav pieredzes ierakstu. Vispirms izveidojiet tos datu bāzē.</p></div>
             <?php endif; ?>
             <div class="form-actions" style="display:flex;gap:8px;flex-wrap:wrap">
-                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-check"></i> Saglabāt visu</button>
+                <button type="submit" name="action" value="save" class="btn btn-primary"><i class="fa-solid fa-check"></i> Saglabāt visu</button>
                 <button type="submit" name="action" value="add" class="btn btn-outline"><i class="fa-solid fa-plus"></i> Pievienot pieredzi</button>
             </div>
         </form>

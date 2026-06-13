@@ -82,7 +82,6 @@ $page_title = ($lang === 'en') ? 'Services (EN)' : 'Pakalpojumi (LV)';
         </div>
         <form method="POST" class="content-form">
             <input type="hidden" name="lang" value="<?= $lang ?>">
-            <input type="hidden" name="action" value="save">
             <div id="sortable-services">
             <?php foreach ($services as $i => $svc): ?>
                 <div class="card" data-id="<?= $svc['id'] ?>">
@@ -111,7 +110,7 @@ $page_title = ($lang === 'en') ? 'Services (EN)' : 'Pakalpojumi (LV)';
                 <div class="card"><p class="text-muted">Nav pakalpojumu. Vispirms izveidojiet tos datu bāzē.</p></div>
             <?php endif; ?>
             <div class="form-actions" style="display:flex;gap:8px;flex-wrap:wrap">
-                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-check"></i> Saglabāt visu</button>
+                <button type="submit" name="action" value="save" class="btn btn-primary"><i class="fa-solid fa-check"></i> Saglabāt visu</button>
                 <button type="submit" name="action" value="add" class="btn btn-outline"><i class="fa-solid fa-plus"></i> Pievienot pakalpojumu</button>
             </div>
         </form>
