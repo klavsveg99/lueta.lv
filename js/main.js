@@ -76,6 +76,7 @@ function openMobileMenu() {
     mobileMenuOverlay.classList.add('active');
     document.body.style.overflow = 'hidden';
     if (backToTop) backToTop.style.display = 'none';
+    if (whatsappBtn) whatsappBtn.style.display = 'none';
 }
 function closeMobileMenu() {
     mainNav.classList.remove('active');
@@ -83,6 +84,7 @@ function closeMobileMenu() {
     mobileMenuOverlay.classList.remove('active');
     document.body.style.overflow = '';
     if (backToTop) backToTop.style.display = '';
+    if (whatsappBtn) whatsappBtn.style.display = '';
 }
 
 if (mobileMenuToggle) {
@@ -285,6 +287,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // BACK TO TOP
 const backToTopBtn = document.getElementById('backToTop');
+const whatsappBtn = document.getElementById('whatsappBtn');
 function updateBackToTop() {
     if (!backToTopBtn) return;
     const popupActive = contactPopup?.classList.contains('active');
@@ -292,8 +295,10 @@ function updateBackToTop() {
     const cookieModalActive = document.getElementById('cookieModal')?.classList.contains('show');
     if (window.scrollY > 300 && !popupActive && !modalActive && !cookieModalActive) {
         backToTopBtn.style.display = 'flex';
+        if (whatsappBtn) whatsappBtn.style.display = 'flex';
     } else {
         backToTopBtn.style.display = 'none';
+        if (whatsappBtn) whatsappBtn.style.display = 'none';
     }
 }
 window.addEventListener('scroll', updateBackToTop, { passive: true });
