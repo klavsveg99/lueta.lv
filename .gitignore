@@ -1,7 +1,6 @@
 *:Zone.Identifier
 .env
 private/
-admin/inc/config.php
 vendor/
 .DS_Store
 Thumbs.db
