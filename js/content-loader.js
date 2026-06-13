@@ -52,6 +52,13 @@
     return fetchJson(api + '/' + table + '?' + q + '&order=' + encodeURIComponent('display_order.asc'));
   }
 
+  function fetchFallbackImages() {
+    return fetch('get-images.php').then(function (r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    }).catch(function () { return []; });
+  }
+
   // Start fetching immediately (each failure returns empty defaults)
   var safe = function (p, def) { return p.catch(function () { return def; }); };
   var dataPromise = Promise.all([
@@ -59,7 +66,8 @@
     safe(fetchItems('services'), []),
     safe(fetchItems('testimonials'), []),
     safe(fetchItems('experiences'), []),
-    safe(fetchGlobalImages(), {})
+    safe(fetchGlobalImages(), {}),
+    safe(fetchFallbackImages(), [])
   ]);
 
   function domReady(fn) {
@@ -73,7 +81,7 @@
     return d.innerHTML;
   }
 
-  function applyBlocks(blocks) {
+  function applyBlocks(blocks, fallbackImages) {
     Object.keys(blocks).forEach(function (key) {
       var val = blocks[key];
       if (val == null || val === '') return;
@@ -156,11 +164,19 @@
     }
 
     // Set hero and missis images from JSON gallery arrays (random pick)
-    function startSlideshow(key, sel1, sel2) {
-      if (!blocks[key]) return;
+    function startSlideshow(key, sel1, sel2, fallbackImages) {
+      var paths = [];
+      if (blocks[key]) {
+        try {
+          var parsed = JSON.parse(blocks[key]);
+          if (Array.isArray(parsed) && parsed.length) paths = parsed;
+        } catch(e) {}
+      }
+      if (!paths.length && fallbackImages && fallbackImages.length) {
+        paths = fallbackImages;
+      }
+      if (!paths.length) return;
       try {
-        var paths = JSON.parse(blocks[key]);
-        if (!Array.isArray(paths) || !paths.length) return;
         var container1 = document.querySelector(sel1);
         var container2 = document.querySelector(sel2);
         var img1 = container1 ? container1.querySelector('img') : null;
@@ -217,8 +233,8 @@
         setInterval(updateImages, 4000);
       } catch(e) { console.warn('Slideshow error for ' + key + ':', e); }
     }
-    startSlideshow('hero_images', '.hero-img-1', '.hero-img-2');
-    startSlideshow('missis_images', '.missis-img-1', '.missis-img-2');
+    startSlideshow('hero_images', '.hero-img-1', '.hero-img-2', fallbackImages);
+    startSlideshow('missis_images', '.missis-img-1', '.missis-img-2', fallbackImages);
   }
 
   function renderServices(items) {
@@ -282,6 +298,7 @@
     var testimonials = results[2];
     var experiences = results[3];
     var globalImages = results[4];
+    var fallbackImages = results[5];
 
     // Merge global images into blocks so they're available for the slideshow
     if (globalImages) {
@@ -289,7 +306,7 @@
     }
 
     domReady(function () {
-      if (blocks && Object.keys(blocks).length) applyBlocks(blocks);
+      if (blocks && Object.keys(blocks).length) applyBlocks(blocks, fallbackImages);
       if (services && services.length) { renderServices(services); observeReveals(); }
       if (testimonials && testimonials.length) { renderTestimonials(testimonials); observeReveals(); }
       if (experiences && experiences.length) { renderExperiences(experiences); observeReveals(); }
