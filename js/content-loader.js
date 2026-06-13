@@ -213,26 +213,29 @@
           });
         }
 
-        function swapImage(imgEl, item) {
+        function swapImage(imgEl, item, stagger) {
           if (!imgEl || !item) return;
-          imgEl.style.opacity = '0';
-          var trySwap = function(attempts) {
-            if (item.ready || attempts > 20) {
-              imgEl.src = item.src;
-              imgEl.style.opacity = '1';
-            } else {
-              setTimeout(function() { trySwap(attempts + 1); }, 50);
-            }
-          };
-          setTimeout(function() { trySwap(0); }, 1000);
+          var delay = stagger || 0;
+          setTimeout(function() {
+            imgEl.style.opacity = '0';
+            var trySwap = function(attempts) {
+              if (item.ready || attempts > 20) {
+                imgEl.src = item.src;
+                imgEl.style.opacity = '1';
+              } else {
+                setTimeout(function() { trySwap(attempts + 1); }, 50);
+              }
+            };
+            setTimeout(function() { trySwap(0); }, 1000);
+          }, delay);
         }
 
         function updateImages() {
           if (preloaded.length < 2) preloadNext();
           var p1 = preloaded.shift();
           var p2 = preloaded.shift();
-          swapImage(img1, p1);
-          swapImage(img2, p2);
+          swapImage(img1, p1, 0);
+          swapImage(img2, p2, 1500);
           preloadNext();
         }
 
