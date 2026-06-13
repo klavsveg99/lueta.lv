@@ -405,24 +405,16 @@ $page_title = 'Satura redaktors';
                 </div>
             <?php } ?>
 
-            <div class="form-actions page-content">
-                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-check"></i> Saglabāt visu</button>
-            </div>
-        </form>
-
-        <?php
-        if ($section_filter === 'all' || $section_filter === 'images'):
-            // Fetch images from global page to ensure they are shared across languages
-            $globalImages = getExistingBlocks($supabase, $globalPage);
-            $heroImages = json_decode($globalImages['hero_images']['block_value'] ?? '[]', true);
-            $missisImages = json_decode($globalImages['missis_images']['block_value'] ?? '[]', true);
-            if (!is_array($heroImages)) $heroImages = array();
-            if (!is_array($missisImages)) $missisImages = array();
-        ?>
-        <div class="page-content" style="margin-top:16px">
-            <div class="card">
+            <?php
+            if ($section_filter === 'all' || $section_filter === 'images'):
+                $globalImages = getExistingBlocks($supabase, $globalPage);
+                $heroImages = json_decode($globalImages['hero_images']['block_value'] ?? '[]', true);
+                $missisImages = json_decode($globalImages['missis_images']['block_value'] ?? '[]', true);
+                if (!is_array($heroImages)) $heroImages = array();
+                if (!is_array($missisImages)) $missisImages = array();
+            ?>
+            <div class="card" style="margin-top:16px">
                 <h2><i class="fa-solid fa-images"></i> Hero attēli</h2>
-                
                 <div class="gallery-grid" id="heroGallery">
                     <?php foreach ($heroImages as $idx => $path): ?>
                         <div class="gallery-item" data-path="<?= htmlspecialchars($path) ?>">
@@ -431,21 +423,9 @@ $page_title = 'Satura redaktors';
                         </div>
                     <?php endforeach; ?>
                 </div>
-                <form id="heroUploadForm" enctype="multipart/form-data" style="margin-top:12px">
-                    <input type="hidden" name="lang" value="<?= $lang ?>">
-                    <input type="hidden" name="section" value="hero">
-                    <div class="form-row">
-                        <div class="form-group" style="flex:1">
-                            <input type="file" name="image" accept="image/*" required multiple>
-                        </div>
-                        <button type="submit" class="btn btn-primary btn-sm"><i class="fa-solid fa-upload"></i> Augšupielādēt</button>
-                    </div>
-                </form>
             </div>
-
             <div class="card">
                 <h2><i class="fa-solid fa-images"></i> Papildus info attēli</h2>
-                
                 <div class="gallery-grid" id="missisGallery">
                     <?php foreach ($missisImages as $idx => $path): ?>
                         <div class="gallery-item" data-path="<?= htmlspecialchars($path) ?>">
@@ -454,17 +434,44 @@ $page_title = 'Satura redaktors';
                         </div>
                     <?php endforeach; ?>
                 </div>
-                <form id="missisUploadForm" enctype="multipart/form-data" style="margin-top:12px">
+            </div>
+            <?php endif; ?>
+
+            <div class="form-actions page-content">
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-check"></i> Saglabāt visu</button>
+            </div>
+        </form>
+
+        <?php if ($section_filter === 'all' || $section_filter === 'images'): ?>
+        <div class="page-content" style="margin-top:16px">
+            <div class="card">
+                <form id="heroUploadForm" enctype="multipart/form-data">
                     <input type="hidden" name="lang" value="<?= $lang ?>">
-                    <input type="hidden" name="section" value="missis">
+                    <input type="hidden" name="section" value="hero">
                     <div class="form-row">
                         <div class="form-group" style="flex:1">
+                            <label>Hero attēli - Augšupielādēt</label>
                             <input type="file" name="image" accept="image/*" required multiple>
                         </div>
                         <button type="submit" class="btn btn-primary btn-sm"><i class="fa-solid fa-upload"></i> Augšupielādēt</button>
                     </div>
                 </form>
             </div>
+            <div class="card">
+                <form id="missisUploadForm" enctype="multipart/form-data">
+                    <input type="hidden" name="lang" value="<?= $lang ?>">
+                    <input type="hidden" name="section" value="missis">
+                    <div class="form-row">
+                        <div class="form-group" style="flex:1">
+                            <label>Papildus info attēli - Augšupielādēt</label>
+                            <input type="file" name="image" accept="image/*" required multiple>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-sm"><i class="fa-solid fa-upload"></i> Augšupielādēt</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <?php endif; ?>
         </div>
         <?php endif; ?>
 
