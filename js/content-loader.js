@@ -205,30 +205,51 @@
           return [p1, p2];
         }
 
+        function fadeSwap(imgEl, newSrc, cb) {
+          if (!imgEl) { if (cb) cb(); return; }
+          if (imgEl.src.indexOf(newSrc) !== -1 && imgEl.style.opacity === '1') { if (cb) cb(); return; }
+          imgEl.style.transition = 'none';
+          imgEl.style.opacity = '0';
+          void imgEl.offsetWidth;
+          imgEl.src = newSrc;
+          imgEl.offsetHeight;
+          imgEl.style.transition = 'opacity 1s ease-in-out';
+          void imgEl.offsetWidth;
+          imgEl.style.opacity = '1';
+          var onDone = function() {
+            imgEl.removeEventListener('transitionend', onDone);
+            if (cb) cb();
+          };
+          imgEl.addEventListener('transitionend', onDone);
+          setTimeout(onDone, 1200);
+        }
+
         var pending = paths.length;
         function onAllPreloaded() {
           var pair = nextPair();
-          if (img1 && pair[0]) { img1.src = pair[0]; img1.style.opacity = '1'; }
-          if (img2 && pair[1]) {
+          img1.style.transition = 'none';
+          if (pair[0]) img1.src = pair[0];
+          img1.style.opacity = '1';
+          if (img2) {
             if (container2) container2.style.display = 'block';
-            img2.src = pair[1]; img2.style.opacity = '1';
-          } else if (img2) {
-            if (container2) container2.style.display = 'none';
+            img2.style.transition = 'none';
+            if (pair[1]) img2.src = pair[1];
+            img2.style.opacity = '1';
+          } else if (container2) {
+            container2.style.display = 'none';
           }
+          void img1.offsetWidth;
+          if (img2) void img2.offsetWidth;
 
-          setInterval(function() {
+          setInterval(function () {
             var pair = nextPair();
-            if (img1 && pair[0]) {
-              img1.style.opacity = '0';
-              setTimeout(function() { img1.src = pair[0]; img1.style.opacity = '1'; }, 1000);
-            }
-            if (img2 && pair[1]) {
-              if (container2) container2.style.display = 'block';
-              setTimeout(function() {
-                img2.style.opacity = '0';
-                setTimeout(function() { img2.src = pair[1]; img2.style.opacity = '1'; }, 1000);
-              }, 1500);
-            }
+            fadeSwap(img1, pair[0]);
+            setTimeout(function() {
+              if (img2) {
+                if (container2) container2.style.display = 'block';
+                fadeSwap(img2, pair[1]);
+              }
+            }, 1500);
           }, 4000);
         }
 
