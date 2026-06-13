@@ -61,9 +61,10 @@ $page = $isEnglish ? 'en' : 'index';
 
 // Save to Supabase contact_submissions
 try {
+    $cfg = require __DIR__ . '/private/config.php';
     $supabase = new \App\SupabaseClient(
-        'https://nyrzjdotaxacvjomthll.supabase.co',
-        'REPLACE_SERVICE_KEY',
+        $cfg['supabaseUrl'],
+        $cfg['supabaseServiceKey'],
         ''
     );
     $supabase->insert('contact_submissions', [
