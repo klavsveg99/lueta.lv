@@ -183,8 +183,6 @@
         var img2 = container2 ? container2.querySelector('img') : null;
         if (!img1 && !img2) return;
 
-        var deck = [];
-        var preloaded = [];
         function shuffleArray(arr) {
           var a = arr.slice();
           for (var i = a.length - 1; i > 0; i--) {
@@ -193,66 +191,56 @@
           }
           return a;
         }
-        function refillDeck() {
-          deck = shuffleArray(paths);
-        }
-        function preloadImage(src) {
-          var img = new Image();
-          img.src = src;
-          return img;
-        }
-        function preloadNext() {
-          preloaded = [];
-          if (deck.length < 2) refillDeck();
-          for (var i = 0; i < 2 && deck.length > 0; i++) {
-            preloaded.push({ src: deck.shift(), ready: false });
+
+        var order = [];
+        var pos = 0;
+        function nextPair() {
+          if (pos >= order.length - 1) {
+            order = shuffleArray(paths);
+            pos = 0;
           }
-          preloaded.forEach(function(item) {
-            var p = preloadImage(item.src);
-            p.onload = function() { item.ready = true; };
-          });
+          var p1 = order[pos];
+          var p2 = order[pos + 1] || order[0];
+          pos += 2;
+          return [p1, p2];
         }
 
-        function swapImage(imgEl, item, stagger) {
-          if (!imgEl || !item) return;
-          var delay = stagger || 0;
-          setTimeout(function() {
-            imgEl.style.opacity = '0';
-            var trySwap = function(attempts) {
-              if (item.ready || attempts > 20) {
-                imgEl.src = item.src;
-                imgEl.style.opacity = '1';
-              } else {
-                setTimeout(function() { trySwap(attempts + 1); }, 50);
-              }
-            };
-            setTimeout(function() { trySwap(0); }, 1000);
-          }, delay);
+        var pending = paths.length;
+        function onAllPreloaded() {
+          var pair = nextPair();
+          if (img1 && pair[0]) { img1.src = pair[0]; img1.style.opacity = '1'; }
+          if (img2 && pair[1]) {
+            if (container2) container2.style.display = 'block';
+            img2.src = pair[1]; img2.style.opacity = '1';
+          } else if (img2) {
+            if (container2) container2.style.display = 'none';
+          }
+
+          setInterval(function() {
+            var pair = nextPair();
+            if (img1 && pair[0]) {
+              img1.style.opacity = '0';
+              setTimeout(function() { img1.src = pair[0]; img1.style.opacity = '1'; }, 1000);
+            }
+            if (img2 && pair[1]) {
+              if (container2) container2.style.display = 'block';
+              setTimeout(function() {
+                img2.style.opacity = '0';
+                setTimeout(function() { img2.src = pair[1]; img2.style.opacity = '1'; }, 1000);
+              }, 1500);
+            }
+          }, 4000);
         }
 
-        function updateImages() {
-          if (preloaded.length < 2) preloadNext();
-          var p1 = preloaded.shift();
-          var p2 = preloaded.shift();
-          swapImage(img1, p1, 0);
-          swapImage(img2, p2, 1500);
-          preloadNext();
-        }
-
-        refillDeck();
-        preloadNext();
-        if (preloaded.length > 0) {
-          var first = preloaded.shift();
-          if (img1 && first) { img1.src = first.src; img1.style.opacity = '1'; }
-        }
-        if (preloaded.length > 0) {
-          var second = preloaded.shift();
-          if (img2 && second) { img2.src = second.src; img2.style.opacity = '1'; }
-        } else if (img2) {
-          if (container2) container2.style.display = 'none';
-        }
-
-        setInterval(updateImages, 4000);
+        paths.forEach(function(path) {
+          var im = new Image();
+          im.onload = im.onerror = function() {
+            pending--;
+            if (pending <= 0) onAllPreloaded();
+          };
+          im.src = path;
+        });
+        if (pending <= 0) onAllPreloaded();
       } catch(e) { console.warn('Slideshow error for ' + key + ':', e); }
     }
     startSlideshow('hero_images', '.hero-img-1', '.hero-img-2', fallbackImages);
