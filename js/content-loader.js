@@ -2,7 +2,7 @@
   // ── CONFIG ── Fill these with your Supabase project details ──
   var CONFIG = {
     supabaseUrl: 'https://nyrzjdotaxacvjomthll.supabase.co',
-    supabaseKey: 'REPLACE_ANON_KEY',
+    supabaseKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im55cnpqZG90YXhhY3Zqb210aGxsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODExMTE1MzAsImV4cCI6MjA5NjY4NzUzMH0.rxocr7Og-NbcucDWZ01l80F3ZSNc17sREoZdfLj1J3U',
   };
   // ──────────────────────────────────────────────────────────────
 
