@@ -184,48 +184,67 @@
         if (!img1 && !img2) return;
 
         var deck = [];
-        function refillDeck() {
-          var shuffled = paths.slice();
-          for (var i = shuffled.length - 1; i > 0; i--) {
+        var preloaded = [];
+        function shuffleArray(arr) {
+          var a = arr.slice();
+          for (var i = a.length - 1; i > 0; i--) {
             var j = Math.floor(Math.random() * (i + 1));
-            var tmp = shuffled[i]; shuffled[i] = shuffled[j]; shuffled[j] = tmp;
+            var tmp = a[i]; a[i] = a[j]; a[j] = tmp;
           }
-          deck = shuffled;
+          return a;
+        }
+        function refillDeck() {
+          deck = shuffleArray(paths);
+        }
+        function preloadImage(src) {
+          var img = new Image();
+          img.src = src;
+          return img;
+        }
+        function preloadNext() {
+          preloaded = [];
+          if (deck.length < 2) refillDeck();
+          for (var i = 0; i < 2 && deck.length > 0; i++) {
+            preloaded.push({ src: deck.shift(), ready: false });
+          }
+          preloaded.forEach(function(item) {
+            var p = preloadImage(item.src);
+            p.onload = function() { item.ready = true; };
+          });
+        }
+
+        function swapImage(imgEl, item) {
+          if (!imgEl || !item) return;
+          imgEl.style.opacity = '0';
+          var trySwap = function(attempts) {
+            if (item.ready || attempts > 20) {
+              imgEl.src = item.src;
+              imgEl.style.opacity = '1';
+            } else {
+              setTimeout(function() { trySwap(attempts + 1); }, 50);
+            }
+          };
+          setTimeout(function() { trySwap(0); }, 1000);
         }
 
         function updateImages() {
-          if (deck.length < 2) refillDeck();
-          var p1 = deck.shift();
-          var p2 = deck.shift();
-          if (img1) {
-            if (p1) {
-              img1.style.opacity = '0';
-              setTimeout(function() { img1.src = p1; img1.style.opacity = '1'; }, 1000);
-            } else {
-              if (container1) container1.style.display = 'none';
-            }
-          }
-          if (img2) {
-            if (p2) {
-              if (container2) container2.style.display = 'block';
-              img2.style.opacity = '0';
-              setTimeout(function() { img2.src = p2; img2.style.opacity = '1'; }, 1000);
-            } else {
-              if (container2) container2.style.display = 'none';
-            }
-          }
+          if (preloaded.length < 2) preloadNext();
+          var p1 = preloaded.shift();
+          var p2 = preloaded.shift();
+          swapImage(img1, p1);
+          swapImage(img2, p2);
+          preloadNext();
         }
 
         refillDeck();
-        if (img1 && deck.length > 0) {
-          var p1 = deck.shift();
-          img1.src = p1;
-          img1.style.opacity = '1';
+        preloadNext();
+        if (preloaded.length > 0) {
+          var first = preloaded.shift();
+          if (img1 && first) { img1.src = first.src; img1.style.opacity = '1'; }
         }
-        if (img2 && deck.length > 0) {
-          var p2 = deck.shift();
-          img2.src = p2;
-          img2.style.opacity = '1';
+        if (preloaded.length > 0) {
+          var second = preloaded.shift();
+          if (img2 && second) { img2.src = second.src; img2.style.opacity = '1'; }
         } else if (img2) {
           if (container2) container2.style.display = 'none';
         }
