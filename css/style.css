@@ -1403,6 +1403,7 @@ footer {
 .nav-contact-link {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 8px;
     padding: 14px 18px;
     font-size: 15px;
