@@ -106,12 +106,7 @@ $page_title = ($lang === 'en') ? 'Experience (EN)' : 'Pieredze (LV)';
                 <div class="card" data-id="<?= $item['id'] ?>">
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
                         <h2 style="margin:0"><?= htmlspecialchars($item['title'] ?: 'Pieredze #' . ($i + 1)) ?></h2>
-                        <form method="POST" style="display:inline" onsubmit="return confirm('Dzēst šo pieredzi?')">
-                            <input type="hidden" name="lang" value="<?= $lang ?>">
-                            <input type="hidden" name="action" value="delete">
-                            <input type="hidden" name="id" value="<?= $item['id'] ?>">
-                            <button type="submit" class="btn btn-danger btn-sm"><i class="fa-solid fa-trash"></i></button>
-                        </form>
+                        <button type="button" class="btn btn-danger btn-sm" onclick="deleteItem('<?= $item['id'] ?>', '<?= $lang ?>')"><i class="fa-solid fa-trash"></i></button>
                     </div>
                     <input type="hidden" name="id[]" value="<?= $item['id'] ?>">
     
@@ -142,7 +137,7 @@ $page_title = ($lang === 'en') ? 'Experience (EN)' : 'Pieredze (LV)';
             <?php if (empty($items)): ?>
                 <div class="card"><p class="text-muted">Nav pieredzes ierakstu. Vispirms izveidojiet tos datu bāzē.</p></div>
             <?php endif; ?>
-            <div class="form-actions" style="display:flex;gap:8px;flex-wrap:wrap">
+            <div class="form-actions page-content" style="display:flex;gap:8px;flex-wrap:wrap">
                 <button type="submit" class="btn btn-primary"><i class="fa-solid fa-check"></i> Saglabāt visu</button>
             </div>
         </form>
@@ -171,6 +166,15 @@ $page_title = ($lang === 'en') ? 'Experience (EN)' : 'Pieredze (LV)';
 </div>
 <script src="js/admin.js?v=<?= filemtime(__DIR__ . '/js/admin.js') ?>"></script>
 <script>
+function deleteItem(id, lang) {
+    if (!confirm('Dzēst šo pieredzi?')) return;
+    var fd = new FormData();
+    fd.append('action', 'delete');
+    fd.append('id', id);
+    fd.append('lang', lang);
+    fetch('experience.php', { method: 'POST', body: fd })
+        .then(function() { location.reload(); });
+}
 document.addEventListener('DOMContentLoaded', function() {
     var el = document.getElementById('sortable-experience');
     if (el) {
