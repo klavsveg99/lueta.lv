@@ -65,7 +65,12 @@ try {
     }
 
     $blogs = $supabase->select('blogs', array('page' => 'eq.' . $page, 'select' => '*', 'order' => 'published_at.desc'));
-    if (!is_array($blogs)) $blogs = array();
+    if (!is_array($blogs)) {
+        $blogs = array();
+    } elseif (isset($blogs['error'])) {
+        $php_error = $blogs['error'];
+        $blogs = array();
+    }
 } catch (\Throwable $e) {
     $php_error = $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine();
 }
