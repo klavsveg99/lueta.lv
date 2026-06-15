@@ -460,7 +460,7 @@
       if (services && services.length) { renderServices(services); observeReveals(); }
       if (testimonials && testimonials.length) { renderTestimonials(testimonials); observeReveals(); }
       if (experiences && experiences.length) { renderExperiences(experiences); observeReveals(); }
-      if (blogs && blogs.length) { renderBlogs(blogs); }
+      renderBlogs(blogs);
       if (blocks) updateStats();
     });
   }).catch(function (e) { console.warn('CMS load failed:', e); });

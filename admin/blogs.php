@@ -102,7 +102,7 @@ $page_title = ($lang === 'en') ? 'Jaunumi (EN)' : 'Jaunumi (LV)';
         </div>
 
         <div class="page-content">
-            <button class="btn btn-primary" id="addBlogBtn" style="margin-bottom:24px"><i class="fa-solid fa-plus"></i> Pievienot rakstu</button>
+            <button class="btn btn-primary" id="addBlogBtn" onclick="openBlogModal()" style="margin-bottom:24px"><i class="fa-solid fa-plus"></i> Pievienot rakstu</button>
 
             <?php foreach ($blogs as $blog): ?>
                 <div class="card" style="display:flex;gap:16px;padding:16px;align-items:center;margin-bottom:12px">
@@ -174,7 +174,7 @@ $page_title = ($lang === 'en') ? 'Jaunumi (EN)' : 'Jaunumi (LV)';
             </div>
 
             <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:16px">
-                <button type="button" class="btn btn-outline" id="closeModalBtn">Atcelt</button>
+                <button type="button" class="btn btn-outline" id="closeModalBtn" onclick="closeBlogModal()">Atcelt</button>
                 <button type="submit" class="btn btn-primary"><i class="fa-solid fa-check"></i> Saglabāt</button>
             </div>
         </form>
@@ -182,43 +182,26 @@ $page_title = ($lang === 'en') ? 'Jaunumi (EN)' : 'Jaunumi (LV)';
 </div>
 
 <script>
+function openBlogModal() {
+    var m = document.getElementById('blogModal');
+    if (m) m.style.display = 'flex';
+    document.getElementById('blogId').value = '';
+    document.getElementById('blogTitle').value = '';
+    document.getElementById('blogDesc').value = '';
+    document.getElementById('blogContent').value = '';
+    document.getElementById('blogDate').value = '<?= date('Y-m-d') ?>';
+    document.getElementById('featuredImage').value = '';
+    document.getElementById('modalTitle').innerText = 'Pievienot rakstu';
+}
+function closeBlogModal() {
+    var m = document.getElementById('blogModal');
+    if (m) m.style.display = 'none';
+}
 (function() {
-    console.log('[Blogs] Script loaded');
-
-    var modal = document.getElementById('blogModal');
-    if (!modal) { console.error('[Blogs] Modal not found'); return; }
-
-    function openModal() {
-        console.log('[Blogs] Opening modal');
-        modal.style.display = 'flex';
-    }
-
-    function closeModal() {
-        console.log('[Blogs] Closing modal');
-        modal.style.display = 'none';
-    }
-
-    var addBtn = document.getElementById('addBlogBtn');
-    if (addBtn) {
-        console.log('[Blogs] Add button found');
-        addBtn.addEventListener('click', function() {
-            console.log('[Blogs] Add button clicked');
-            document.getElementById('blogId').value = '';
-            document.getElementById('blogTitle').value = '';
-            document.getElementById('blogDesc').value = '';
-            document.getElementById('blogContent').value = '';
-            document.getElementById('blogDate').value = '<?= date('Y-m-d') ?>';
-            document.getElementById('featuredImage').value = '';
-            document.getElementById('modalTitle').innerText = 'Pievienot rakstu';
-            openModal();
-        });
-    } else {
-        console.error('[Blogs] Add button not found');
-    }
+    console.log('[Blogs] Script init');
 
     document.querySelectorAll('.editBlogBtn').forEach(function(btn) {
         btn.addEventListener('click', function() {
-            console.log('[Blogs] Edit button clicked');
             document.getElementById('blogId').value = this.dataset.id;
             document.getElementById('blogTitle').value = this.dataset.title;
             document.getElementById('blogDesc').value = this.dataset.description;
@@ -226,18 +209,15 @@ $page_title = ($lang === 'en') ? 'Jaunumi (EN)' : 'Jaunumi (LV)';
             document.getElementById('featuredImage').value = this.dataset.featured_image;
             document.getElementById('blogContent').value = this.dataset.content || '';
             document.getElementById('modalTitle').innerText = 'Rediģēt rakstu';
-            openModal();
+            openBlogModal();
         });
     });
 
     var closeBtn = document.getElementById('closeModalBtn');
-    if (closeBtn) closeBtn.addEventListener('click', closeModal);
+    if (closeBtn) closeBtn.addEventListener('click', closeBlogModal);
 
-    if (modal) {
-        modal.addEventListener('click', function(e) {
-            if (e.target === modal) closeModal();
-        });
-    }
+    var modal = document.getElementById('blogModal');
+    if (modal) modal.addEventListener('click', function(e) { if (e.target === modal) closeBlogModal(); });
 
     var featBtn = document.getElementById('featuredFileBtn');
     var featFile = document.getElementById('featuredFile');
@@ -259,8 +239,6 @@ $page_title = ($lang === 'en') ? 'Jaunumi (EN)' : 'Jaunumi (LV)';
     var sbClose = document.getElementById('sidebarClose');
     if (sbToggle) sbToggle.addEventListener('click', function() { document.getElementById('adminSidebar').classList.add('open'); });
     if (sbClose) sbClose.addEventListener('click', function() { document.getElementById('adminSidebar').classList.remove('open'); });
-
-    console.log('[Blogs] Script initialized');
 })();
 </script>
 </body>
