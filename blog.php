@@ -94,7 +94,7 @@ if (!is_array($related) || isset($related['error'])) $related = array();
     </header>
 
     <main class="page-content" style="padding:120px 20px 40px; max-width:840px; margin:0 auto">
-        <a href="<?= $lang === 'en' ? 'en.html' : 'index.html' ?>" class="btn-outline" style="display:inline-block; margin-bottom:24px; text-decoration:none"><i class="fa-solid fa-arrow-left"></i> <?= $back_text ?></a>
+        <a href="<?= $lang === 'en' ? 'en.html' : 'index.html' ?>" class="btn-outline" style="display:inline-block; margin-bottom:24px; text-decoration:none; text-align:center; width:fit-content"><i class="fa-solid fa-arrow-left"></i> <?= $back_text ?></a>
         
         <article class="blog-post">
             <div class="blog-header" style="margin-bottom:40px; text-align:center">
@@ -135,9 +135,10 @@ if (!is_array($related) || isset($related['error'])) $related = array();
         <?php endif; ?>
     </main>
 
-    <style>.blog-content img{max-width:100%;height:auto;border-radius:var(--radius)}</style>
+    <style>.blog-content img{max-width:100%;height:auto;border-radius:var(--radius)}@media(max-width:768px){.btn-outline{margin-left:auto!important;margin-right:auto!important;display:table!important}}</style>
     <footer style="padding:40px 0; text-align:center; color:var(--text-muted); font-size:14px">
         &copy; <?= date('Y') ?> Lueta Dzirniece. All rights reserved.
     </footer>
+    <script src="js/main.js?v=<?= filemtime(__DIR__ . '/js/main.js') ?>"></script>
 </body>
 </html>
