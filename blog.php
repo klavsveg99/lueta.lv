@@ -77,7 +77,20 @@ if (!is_array($related) || isset($related['error'])) $related = array();
                 <a href="blog.php?id=<?= $id ?>&lang=lv" class="<?= $lang === 'lv' ? 'active' : '' ?>">LV</a>
                 <a href="blog.php?id=<?= $id ?>&lang=en" class="<?= $lang === 'en' ? 'active' : '' ?>">EN</a>
             </div>
+            <div class="nav-contact-info">
+                <a href="tel:+37120230446" class="nav-contact-link">
+                    <i class="fa-solid fa-phone"></i> +371 20230446
+                </a>
+                <a href="https://wa.me/+37120230446" target="_blank" rel="noopener" class="nav-contact-link nav-whatsapp-link">
+                    <i class="fa-brands fa-whatsapp"></i> WhatsApp
+                </a>
+            </div>
         </nav>
+        <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="<?= $lang === 'en' ? 'Toggle menu' : 'Izvēlne' ?>">
+            <span class="menu-text"><?= $lang === 'en' ? 'Menu' : 'Izvēlne' ?></span>
+            <span class="hamburger-bar"></span>
+        </button>
+        <div class="mobile-menu-overlay" id="mobileMenuOverlay"></div>
     </header>
 
     <main class="page-content" style="padding:120px 20px 40px; max-width:840px; margin:0 auto">
