@@ -100,7 +100,11 @@ $page_title = ($lang === 'en') ? 'Blog (EN)' : 'Blogi (LV)';
             <div class="blog-list">
                 <?php foreach ($blogs as $blog): ?>
                     <div class="card" style="display:flex;gap:16px;padding:16px;align-items:center">
-                        <img src="/<?= htmlspecialchars($blog['featured_image'] ?? 'media/placeholder.jpg') ?>" style="width:80px;height:80px;object-fit:cover;border-radius:var(--radius)">
+                        <?php if (!empty($blog['featured_image'])): ?>
+                            <img src="/<?= htmlspecialchars($blog['featured_image']) ?>" style="width:80px;height:80px;object-fit:cover;border-radius:var(--radius)">
+                        <?php else: ?>
+                            <div style="width:80px;height:80px;border-radius:var(--radius);background:var(--bg3);display:flex;align-items:center;justify-content:center;color:var(--text-muted)"><i class="fa-solid fa-image"></i></div>
+                        <?php endif; ?>
                         <div style="flex:1">
                             <h3 style="margin:0"><?= htmlspecialchars($blog['title']) ?></h3>
                             <div style="font-size:13px;color:var(--text-muted);margin-top:4px">Publicēts: <?= htmlspecialchars($blog['published_at']) ?></div>

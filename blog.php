@@ -86,7 +86,7 @@ $related_title = ($lang === 'en') ? 'Other posts' : 'Citi raksti';
                 <div class="related-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:20px">
                     <?php foreach ($others as $other): ?>
                         <a href="blog.php?id=<?= $other['id'] ?>&lang=<?= $lang ?>" class="related-card" style="text-decoration:none; color:inherit; display:flex; flex-direction:column; gap:12px">
-                            <img src="/<?= htmlspecialchars($other['featured_image'] ?? 'media/placeholder.jpg') ?>" style="width:100%; aspect-ratio:16/9; object-fit:cover; border-radius:var(--radius)">
+                            <img src="/<?= htmlspecialchars($other['featured_image']) ?>" style="width:100%; aspect-ratio:16/9; object-fit:cover; border-radius:var(--radius)">
                             <div style="font-weight:500"><?= htmlspecialchars($other['title']) ?></div>
                         </a>
                     <?php endforeach; ?>
