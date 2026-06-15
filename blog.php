@@ -136,8 +136,36 @@ if (!is_array($related) || isset($related['error'])) $related = array();
     </main>
 
     <style>.blog-content img{max-width:100%;height:auto;border-radius:var(--radius)}@media(max-width:768px){.btn-outline{margin-left:auto!important;margin-right:auto!important;display:table!important}}</style>
-    <footer style="padding:40px 0; text-align:center; color:var(--text-muted); font-size:14px">
-        &copy; <?= date('Y') ?> Lueta Dzirniece. All rights reserved.
+    <footer>
+        <div class="footer-inner">
+            <div class="footer-top">
+                <div class="footer-brand-col">
+                    <div class="footer-logo">Lueta<span>.</span></div>
+                    <p class="footer-desc"><?= $lang === 'en' ? 'I am a marketing strategist with 10+ years of experience. I build brands that turn ideas into reality.' : 'Esmu mārketinga stratēģe ar 10+ gadu pieredzi. Veidoju zīmolus, kas pārvērš idejas jaunā realitātē.' ?></p>
+                    <div class="footer-social">
+                        <a href="https://www.linkedin.com/in/creative-lueta" target="_blank" rel="noopener" aria-label="LinkedIn"><i class="fa-brands fa-linkedin"></i></a>
+                        <a href="https://www.instagram.com/creative_lueta/" target="_blank" rel="noopener" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+                        <a href="https://www.facebook.com/lue.ta.7" target="_blank" rel="noopener" aria-label="Facebook"><i class="fa-brands fa-facebook"></i></a>
+                        <a href="mailto:lueta@lueta.lv" aria-label="E-pasts"><i class="fa-solid fa-envelope"></i></a>
+                    </div>
+                </div>
+                <div class="footer-links">
+                    <a href="<?= $lang === 'en' ? 'en.html#about' : 'index.html#par' ?>"><?= $lang === 'en' ? 'About' : 'Par mani' ?></a>
+                    <a href="<?= $lang === 'en' ? 'en.html#services' : 'index.html#pakalpojumi' ?>"><?= $lang === 'en' ? 'Services' : 'Pakalpojumi' ?></a>
+                    <a href="<?= $lang === 'en' ? 'en.html#achievement' : 'index.html#achievement' ?>"><?= $lang === 'en' ? 'Achievement' : 'Sasniegumi' ?></a>
+                    <a href="<?= $lang === 'en' ? 'en.html#experience' : 'index.html#pieredze' ?>"><?= $lang === 'en' ? 'Experience' : 'Pieredze' ?></a>
+                    <a href="<?= $lang === 'en' ? 'en.html#testimonials' : 'index.html#testimonials' ?>"><?= $lang === 'en' ? 'Testimonials' : 'Atsauksmes' ?></a>
+                    <a href="<?= $lang === 'en' ? 'en.html#contact' : 'index.html#contact' ?>"><?= $lang === 'en' ? 'Contact' : 'Kontakti' ?></a>
+                </div>
+            </div>
+            <div class="footer-policies">
+                <a href="privacy-policy.html" target="_blank"><?= $lang === 'en' ? 'Privacy Policy' : 'Privātuma politika' ?></a>
+                <a href="cookie-policy.html" target="_blank"><?= $lang === 'en' ? 'Cookie Policy' : 'Sīkdatņu politika' ?></a>
+            </div>
+            <div class="footer-copy">
+                &copy; <?= date('Y') ?> Lueta Dzirniece
+            </div>
+        </div>
     </footer>
     <script src="js/main.js?v=<?= filemtime(__DIR__ . '/js/main.js') ?>"></script>
 </body>
