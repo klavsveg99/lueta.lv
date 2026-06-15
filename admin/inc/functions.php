@@ -128,6 +128,17 @@ function getBlockDefinitions()
             'hero_images' => array('label' => 'Hero attēli', 'type' => 'image'),
             'missis_images' => array('label' => 'Papildus info attēli', 'type' => 'image'),
         ),
+        'blog' => array(
+            'blog_tag' => array('label' => 'Sadaļas augšteksts', 'type' => 'text',
+                'placeholder' => 'Jaunumi',
+                'placeholder_en' => 'Latest'),
+            'blog_title' => array('label' => 'Virsraksts', 'type' => 'text',
+                'placeholder' => 'Jaunumi',
+                'placeholder_en' => 'Blog'),
+            'blog_desc' => array('label' => 'Satura apraksts', 'type' => 'textarea',
+                'placeholder' => 'Iedvesma, stāsti un atjauninājumi no manas ceļojuma.',
+                'placeholder_en' => 'Insights, stories and updates from my journey.'),
+        ),
     );
 }
 

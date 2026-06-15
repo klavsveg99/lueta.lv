@@ -336,15 +336,15 @@
 
     var tag = document.createElement('div');
     tag.className = 'section-tag reveal';
-    tag.innerText = page === 'en' ? 'Latest' : 'Jaunumi';
+    tag.innerText = window.cmsBlocks && window.cmsBlocks.blog_tag ? window.cmsBlocks.blog_tag : (page === 'en' ? 'Latest' : 'Jaunumi');
 
     var title = document.createElement('h2');
     title.className = 'section-title reveal reveal-delay-1';
-    title.innerText = page === 'en' ? 'Blog' : 'Jaunumi';
+    title.innerText = window.cmsBlocks && window.cmsBlocks.blog_title ? window.cmsBlocks.blog_title : (page === 'en' ? 'Blog' : 'Jaunumi');
 
     var desc = document.createElement('p');
     desc.className = 'section-desc reveal reveal-delay-2';
-    desc.innerText = page === 'en' ? 'Insights, stories and updates from my journey.' : 'Iedvesma, stāsti un atjauninājumi no manas ceļojuma.';
+    desc.innerText = window.cmsBlocks && window.cmsBlocks.blog_desc ? window.cmsBlocks.blog_desc : (page === 'en' ? 'Insights, stories and updates from my journey.' : 'Iedvesma, stāsti un atjauninājumi no manas ceļojuma.');
     desc.style.maxWidth = '600px';
     desc.style.margin = '12px auto 0';
     desc.style.color = 'var(--text-muted)';
@@ -449,6 +449,7 @@
     }
 
     domReady(function () {
+      window.cmsBlocks = blocks;
       if (blocks && Object.keys(blocks).length) applyBlocks(blocks, fallbackImages);
       if (services && services.length) { renderServices(services); observeReveals(); }
       if (testimonials && testimonials.length) { renderTestimonials(testimonials); observeReveals(); }

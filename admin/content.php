@@ -322,6 +322,7 @@ $page_title = 'Satura redaktors';
             <a href="?section=testimonials&amp;lang=<?= $lang ?>" class="tab <?= $section_filter === 'testimonials' ? 'active' : '' ?>">Atsauksmes</a>
             <a href="?section=contact&amp;lang=<?= $lang ?>" class="tab <?= $section_filter === 'contact' ? 'active' : '' ?>">Kontakti</a>
             <a href="?section=footer&amp;lang=<?= $lang ?>" class="tab <?= $section_filter === 'footer' ? 'active' : '' ?>">Kājene</a>
+            <a href="?section=blog&amp;lang=<?= $lang ?>" class="tab <?= $section_filter === 'blog' ? 'active' : '' ?>">Blog</a>
             <a href="?section=images&amp;lang=<?= $lang ?>" class="tab <?= $section_filter === 'images' ? 'active' : '' ?>">Attēli</a>
         </div>
 
@@ -344,6 +345,7 @@ $page_title = 'Satura redaktors';
                             'testimonials' => 'Atsauksmju sadaļa',
                             'contact' => 'Kontaktu sadaļa',
                             'footer' => 'Kājene',
+                            'blog' => 'Blog sadaļa',
                         );
                         echo $labels[$section] ?? $section;
                     ?></h2>
