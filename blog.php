@@ -4,6 +4,7 @@ $lang = $_GET['lang'] ?? 'lv';
 if (!in_array($lang, ['lv', 'en'])) $lang = 'lv';
 $page = ($lang === 'en') ? 'en' : 'index';
 
+require_once 'admin/inc/config.php';
 require_once 'admin/inc/functions.php';
 try {
     $supabase = getSupabase();
