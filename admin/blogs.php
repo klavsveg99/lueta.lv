@@ -102,6 +102,10 @@ $page_title = ($lang === 'en') ? 'Jaunumi (EN)' : 'Jaunumi (LV)';
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
     <link rel="stylesheet" href="css/admin.css?v=<?= filemtime(__DIR__ . '/css/admin.css') ?>">
     <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+    <style>
+    #quillEditor .ql-editor { color:#333; background:#fff; }
+    #quillEditor .ql-editor p { color:#333; }
+    </style>
 </head>
 <body>
 <div class="admin-layout">
@@ -200,7 +204,7 @@ $page_title = ($lang === 'en') ? 'Jaunumi (EN)' : 'Jaunumi (LV)';
 
             <div class="form-group">
                 <label>Saturs</label>
-                <div id="quillEditor" style="min-height:250px;background:#fff"></div>
+                <div id="quillEditor" style="min-height:250px;background:#fff;color:#333"></div>
                 <textarea name="content" id="blogContent" style="display:none"></textarea>
             </div>
 
