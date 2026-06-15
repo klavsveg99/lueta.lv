@@ -115,33 +115,35 @@ $page_title = ($lang === 'en') ? 'Jaunumi (EN)' : 'Jaunumi (LV)';
         <div class="page-content">
             <button class="btn btn-primary" id="addBlogBtn" onclick="openBlogModal()" style="margin-bottom:24px"><i class="fa-solid fa-plus"></i> Pievienot rakstu</button>
 
-            <?php foreach ($blogs as $blog): ?>
-                <div class="card" style="display:flex;gap:16px;padding:16px;align-items:center;margin-bottom:12px">
-                    <?php if (!empty($blog['featured_image'])): ?>
-                        <img src="/<?= htmlspecialchars($blog['featured_image']) ?>" alt="" style="width:80px;height:80px;object-fit:cover;border-radius:var(--radius)">
-                    <?php else: ?>
-                        <div style="width:80px;height:80px;border-radius:var(--radius);background:var(--bg3);display:flex;align-items:center;justify-content:center;color:var(--text-muted)"><i class="fa-solid fa-image"></i></div>
-                    <?php endif; ?>
-                    <div style="flex:1">
-                        <h3 style="margin:0"><?= htmlspecialchars($blog['title']) ?></h3>
-                        <div style="font-size:13px;color:var(--text-muted);margin-top:4px">Publicēts: <?= htmlspecialchars($blog['published_at']) ?></div>
+            <?php if (count($blogs) > 0): ?>
+                <?php foreach ($blogs as $blog): ?>
+                    <div class="card" style="display:flex;gap:16px;padding:16px;align-items:center;margin-bottom:12px">
+                        <?php if (!empty($blog['featured_image'])): ?>
+                            <img src="/<?= htmlspecialchars($blog['featured_image']) ?>" alt="" style="width:80px;height:80px;object-fit:cover;border-radius:var(--radius)">
+                        <?php else: ?>
+                            <div style="width:80px;height:80px;border-radius:var(--radius);background:var(--bg3);display:flex;align-items:center;justify-content:center;color:var(--text-muted)"><i class="fa-solid fa-image"></i></div>
+                        <?php endif; ?>
+                        <div style="flex:1">
+                            <h3 style="margin:0"><?= htmlspecialchars($blog['title']) ?></h3>
+                            <div style="font-size:13px;color:var(--text-muted);margin-top:4px">Publicēts: <?= htmlspecialchars($blog['published_at']) ?></div>
+                        </div>
+                        <div style="display:flex;gap:8px">
+                            <button class="btn btn-outline btn-sm editBlogBtn"
+                                data-id="<?= htmlspecialchars($blog['id']) ?>"
+                                data-title="<?= htmlspecialchars($blog['title']) ?>"
+                                data-description="<?= htmlspecialchars($blog['description'] ?? '') ?>"
+                                data-content="<?= htmlspecialchars($blog['content'] ?? '', ENT_QUOTES) ?>"
+                                data-published_at="<?= htmlspecialchars($blog['published_at']) ?>"
+                                data-featured_image="<?= htmlspecialchars($blog['featured_image'] ?? '') ?>">Rediģēt</button>
+                            <form method="POST" style="display:inline" onsubmit="return confirm('Dzēst šo rakstu?')">
+                                <input type="hidden" name="action" value="delete">
+                                <input type="hidden" name="id" value="<?= $blog['id'] ?>">
+                                <button type="submit" class="btn btn-danger btn-sm"><i class="fa-solid fa-trash"></i></button>
+                            </form>
+                        </div>
                     </div>
-                    <div style="display:flex;gap:8px">
-                        <button class="btn btn-outline btn-sm editBlogBtn"
-                            data-id="<?= htmlspecialchars($blog['id']) ?>"
-                            data-title="<?= htmlspecialchars($blog['title']) ?>"
-                            data-description="<?= htmlspecialchars($blog['description'] ?? '') ?>"
-                            data-content="<?= htmlspecialchars($blog['content'] ?? '', ENT_QUOTES) ?>"
-                            data-published_at="<?= htmlspecialchars($blog['published_at']) ?>"
-                            data-featured_image="<?= htmlspecialchars($blog['featured_image'] ?? '') ?>">Rediģēt</button>
-                        <form method="POST" style="display:inline" onsubmit="return confirm('Dzēst šo rakstu?')">
-                            <input type="hidden" name="action" value="delete">
-                            <input type="hidden" name="id" value="<?= $blog['id'] ?>">
-                            <button type="submit" class="btn btn-danger btn-sm"><i class="fa-solid fa-trash"></i></button>
-                        </form>
-                    </div>
-                </div>
-            <?php endforeach; ?>
+                <?php endforeach; ?>
+            <?php endif; ?>
         </div>
     </main>
 </div>
