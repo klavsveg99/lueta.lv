@@ -282,7 +282,7 @@ class CookieConsent {
 document.addEventListener('DOMContentLoaded', () => {
     new CookieConsent();
     const logoLink = document.querySelector('.logo');
-    if (logoLink) logoLink.addEventListener('click', (e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); });
+    if (logoLink) logoLink.addEventListener('click', (e) => { if (logoLink.getAttribute('href') === '#') { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); } });
 });
 
 // BACK TO TOP
