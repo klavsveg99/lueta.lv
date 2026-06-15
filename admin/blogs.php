@@ -61,6 +61,22 @@ try {
             http_response_code(400);
             echo json_encode(array('error' => 'Upload failed'));
             exit;
+        } elseif ($action === 'upload_image') {
+            header('Content-Type: application/json');
+            if (isset($_FILES['file']) && $_FILES['file']['error'] === UPLOAD_ERR_OK) {
+                $ext = strtolower(pathinfo($_FILES['file']['name'], PATHINFO_EXTENSION));
+                if (in_array($ext, array('jpg', 'jpeg', 'png', 'webp', 'gif'))) {
+                    $filename = 'blog-img-' . time() . '-' . substr(md5(mt_rand()), 0, 8) . '.' . $ext;
+                    $dest = __DIR__ . '/../media/' . $filename;
+                    if (move_uploaded_file($_FILES['file']['tmp_name'], $dest)) {
+                        echo json_encode(array('url' => '/media/' . $filename));
+                        exit;
+                    }
+                }
+            }
+            http_response_code(400);
+            echo json_encode(array('error' => 'Upload failed'));
+            exit;
         }
     }
 
@@ -85,6 +101,7 @@ $page_title = ($lang === 'en') ? 'Jaunumi (EN)' : 'Jaunumi (LV)';
     <title><?= $page_title ?> - Admin</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
     <link rel="stylesheet" href="css/admin.css?v=<?= filemtime(__DIR__ . '/css/admin.css') ?>">
+    <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
 </head>
 <body>
 <div class="admin-layout">
@@ -135,7 +152,7 @@ $page_title = ($lang === 'en') ? 'Jaunumi (EN)' : 'Jaunumi (LV)';
                                 data-content="<?= htmlspecialchars($blog['content'] ?? '', ENT_QUOTES) ?>"
                                 data-published_at="<?= htmlspecialchars($blog['published_at']) ?>"
                                 data-featured_image="<?= htmlspecialchars($blog['featured_image'] ?? '') ?>">Rediģēt</button>
-                            <form method="POST" style="display:inline" onsubmit="return confirm('Dzēst šo rakstu?')">
+                            <form method="POST" style="display:inline-flex" onsubmit="return confirm('Dzēst šo rakstu?')">
                                 <input type="hidden" name="action" value="delete">
                                 <input type="hidden" name="id" value="<?= $blog['id'] ?>">
                                 <button type="submit" class="btn btn-danger btn-sm"><i class="fa-solid fa-trash"></i></button>
@@ -182,8 +199,9 @@ $page_title = ($lang === 'en') ? 'Jaunumi (EN)' : 'Jaunumi (LV)';
             </div>
 
             <div class="form-group">
-                <label>Saturs (HTML)</label>
-                <textarea name="content" id="blogContent" rows="15" style="font-family:monospace;font-size:14px;line-height:1.5;resize:vertical" placeholder="Ievadiet saturu HTML formātā..."></textarea>
+                <label>Saturs</label>
+                <div id="quillEditor" style="min-height:250px;background:#fff"></div>
+                <textarea name="content" id="blogContent" style="display:none"></textarea>
             </div>
 
             <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:16px">
@@ -194,13 +212,57 @@ $page_title = ($lang === 'en') ? 'Jaunumi (EN)' : 'Jaunumi (LV)';
     </div>
 </div>
 
+<script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
 <script>
+var quill = null;
+try {
+    quill = new Quill('#quillEditor', {
+        theme: 'snow',
+        modules: {
+            toolbar: [
+                [{ 'header': [1, 2, 3, false] }],
+                ['bold', 'italic', 'underline'],
+                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                ['link', 'image'],
+                ['clean']
+            ]
+        }
+    });
+    quill.getModule('toolbar').addHandler('image', function() {
+        var input = document.createElement('input');
+        input.setAttribute('type', 'file');
+        input.setAttribute('accept', 'image/*');
+        input.click();
+        input.onchange = function() {
+            var file = input.files[0];
+            if (!file) return;
+            var fd = new FormData();
+            fd.append('action', 'upload_image');
+            fd.append('file', file);
+            fetch('blogs.php', { method: 'POST', body: fd })
+                .then(function(r) { return r.json(); })
+                .then(function(d) { if (d.url) { var range = quill.getSelection(true); quill.insertEmbed(range.index, 'image', d.url); } })
+                .catch(function() { alert('Kļūda augšupielādējot attēlu'); });
+        };
+    });
+} catch(e) { console.warn('[Blogs] Quill init failed, using textarea fallback'); }
+
+function setQuillContent(html) {
+    if (quill) { quill.root.innerHTML = html || ''; }
+    else { document.getElementById('blogContent').value = html || ''; }
+}
+function getQuillContent() {
+    if (quill) return quill.root.innerHTML;
+    return document.getElementById('blogContent').value;
+}
+
 function openBlogModal() {
     var m = document.getElementById('blogModal');
     if (m) m.style.display = 'flex';
     document.getElementById('blogId').value = '';
     document.getElementById('blogTitle').value = '';
     document.getElementById('blogDesc').value = '';
+    if (quill) quill.setContents([]);
     document.getElementById('blogContent').value = '';
     document.getElementById('blogDate').value = '<?= date('Y-m-d') ?>';
     document.getElementById('featuredImage').value = '';
@@ -211,8 +273,6 @@ function closeBlogModal() {
     if (m) m.style.display = 'none';
 }
 (function() {
-    console.log('[Blogs] Script init');
-
     document.querySelectorAll('.editBlogBtn').forEach(function(btn) {
         btn.addEventListener('click', function() {
             document.getElementById('blogId').value = this.dataset.id;
@@ -220,10 +280,14 @@ function closeBlogModal() {
             document.getElementById('blogDesc').value = this.dataset.description;
             document.getElementById('blogDate').value = this.dataset.published_at;
             document.getElementById('featuredImage').value = this.dataset.featured_image;
-            document.getElementById('blogContent').value = this.dataset.content || '';
+            setQuillContent(this.dataset.content);
             document.getElementById('modalTitle').innerText = 'Rediģēt rakstu';
             openBlogModal();
         });
+    });
+
+    document.getElementById('blogForm').addEventListener('submit', function() {
+        document.getElementById('blogContent').value = getQuillContent();
     });
 
     var closeBtn = document.getElementById('closeModalBtn');

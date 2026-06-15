@@ -368,7 +368,7 @@
     items.slice(0, 3).forEach(function (item, i) {
       var delay = ' reveal-delay-' + (i + 1);
       var card = document.createElement('a');
-      card.href = 'blog.php?id=' + item.id + '&lang=' + page;
+      card.href = 'blog.php?id=' + item.id + '&lang=' + (page === 'en' ? 'en' : 'lv');
       card.className = 'blog-card reveal' + delay;
       card.style.textDecoration = 'none';
       card.style.color = 'var(--text)';

@@ -5,25 +5,39 @@ if (!in_array($lang, ['lv', 'en'])) $lang = 'lv';
 $page = ($lang === 'en') ? 'en' : 'index';
 
 require_once 'admin/inc/functions.php';
-$supabase = getSupabase();
+try {
+    $supabase = getSupabase();
+} catch (\Throwable $e) {
+    header('Location: index.html'); exit;
+}
 
 $id = $_GET['id'] ?? '';
 if (!$id) {
-    header('Location: index.html');
-    exit;
+    header('Location: index.html'); exit;
 }
 
-$post = $supabase->select('blogs', array('id' => 'eq.' . $id, 'select' => '*'));
-if (!$post || empty($post)) {
-    header('Location: index.html');
-    exit;
+try {
+    $post = $supabase->select('blogs', array('id' => 'eq.' . $id, 'select' => '*'));
+} catch (\Throwable $e) {
+    header('Location: index.html'); exit;
+}
+
+if (!$post || empty($post) || isset($post['error'])) {
+    header('Location: index.html'); exit;
 }
 $post = $post[0];
 
-$page_title = ($lang === 'en') ? $post['title'] : $post['title'];
+$page_title = $post['title'];
 $date_prefix = ($lang === 'en') ? 'Published' : 'Publicēts';
 $back_text = ($lang === 'en') ? 'Back to home' : 'Atpakaļ uz sākumu';
 $related_title = ($lang === 'en') ? 'Other posts' : 'Citi raksti';
+
+try {
+    $related = $supabase->select('blogs', array('page' => 'eq.' . $page, 'select' => 'id,title,featured_image,published_at', 'order' => 'published_at.desc'));
+} catch (\Throwable $e) {
+    $related = array();
+}
+if (!is_array($related) || isset($related['error'])) $related = array();
 ?>
 <!DOCTYPE html>
 <html lang="<?= $lang ?>">
@@ -85,12 +99,7 @@ $related_title = ($lang === 'en') ? 'Other posts' : 'Citi raksti';
             </div>
         </article>
 
-        <?php
-        $related = $supabase->select('blogs', array('page' => 'eq.' . $page, 'select' => 'id,title,featured_image,published_at', 'order' => 'published_at.desc'));
-        if ($related && count($related) > 1) {
-            $others = array_filter($related, function($r) use ($id) { return $r['id'] !== $id; });
-            $others = array_slice($others, 0, 3);
-            ?>
+        <?php if (count($related) > 1): $others = array_filter($related, function($r) use ($id) { return $r['id'] !== $id; }); $others = array_slice($others, 0, 3); ?>
             <section class="related-posts" style="margin-top:60px; border-top:1px solid var(--border); padding-top:40px">
                 <h2 style="margin-bottom:24px; text-align:center"><?= $related_title ?></h2>
                 <div class="related-grid" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:20px">
@@ -109,7 +118,7 @@ $related_title = ($lang === 'en') ? 'Other posts' : 'Citi raksti';
                     <?php endforeach; ?>
                 </div>
             </section>
-        <?php } ?>
+        <?php endif; ?>
     </main>
 
     <footer style="padding:40px 0; text-align:center; color:var(--text-muted); font-size:14px">
