@@ -316,7 +316,13 @@
   }
 
   function renderBlogs(items) {
-    if (!items || !items.length) return;
+    if (!items || !items.length) {
+      var navLink = document.getElementById('navBlogLink');
+      if (navLink) navLink.style.display = 'none';
+      return;
+    }
+    var navLink = document.getElementById('navBlogLink');
+    if (navLink) navLink.style.display = '';
     var hero = document.querySelector('.hero');
     if (!hero) return;
 

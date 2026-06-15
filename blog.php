@@ -44,7 +44,7 @@ $related_title = ($lang === 'en') ? 'Other posts' : 'Citi raksti';
                     <a href="en.html#services">Services</a>
                     <a href="en.html#achievement">Achievement</a>
                     <a href="en.html#experience">Experience</a>
-                    <a href="blogs.php?lang=en" class="nav-link">Blog</a>
+                    <a href="en.html#blog-preview" class="nav-link" id="navBlogLink">Blog</a>
                     <a href="en.html#testimonials">Testimonials</a>
                     <a href="en.html#contact">Contact</a>
                 <?php else: ?>
@@ -52,7 +52,7 @@ $related_title = ($lang === 'en') ? 'Other posts' : 'Citi raksti';
                     <a href="index.html#pakalpojumi">Pakalpojumi</a>
                     <a href="index.html#achievement">Sasniegumi</a>
                     <a href="index.html#pieredze">Pieredze</a>
-                    <a href="blogs.php" class="nav-link">Jaunumi</a>
+                    <a href="index.html#blog-preview" class="nav-link" id="navBlogLink">Jaunumi</a>
                     <a href="index.html#testimonials">Atsauksmes</a>
                     <a href="index.html#contact">Kontakti</a>
                 <?php endif; ?>

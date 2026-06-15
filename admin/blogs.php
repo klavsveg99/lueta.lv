@@ -8,68 +8,59 @@ $supabase = getSupabase();
 $lang = $_GET['lang'] ?? $_POST['lang'] ?? 'lv';
 if (!in_array($lang, ['lv', 'en'])) $lang = 'lv';
 $page = ($lang === 'en') ? 'en' : 'index';
+$error = null;
 $saved = false;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
-    if ($action === 'save') {
-        $id = $_POST['id'] ?? '';
-        $title = trim($_POST['title'] ?? '');
-        $description = trim($_POST['description'] ?? '');
-        $content = $_POST['content'] ?? '';
-        $published_at = $_POST['published_at'] ?? date('Y-m-d');
-        $featured_image = $_POST['featured_image'] ?? '';
+    try {
+        if ($action === 'save') {
+            $id = $_POST['id'] ?? '';
+            $title = trim($_POST['title'] ?? '');
+            $content = $_POST['content'] ?? '';
+            $description = trim($_POST['description'] ?? '');
+            $published_at = $_POST['published_at'] ?? date('Y-m-d');
+            $featured_image = $_POST['featured_image'] ?? '';
 
-        if ($id) {
-            $data = array('title' => $title, 'description' => $description, 'content' => $content, 'published_at' => $published_at);
-            if ($featured_image) $data['featured_image'] = $featured_image;
-            $supabase->update('blogs', $data, array('id' => 'eq.' . $id));
-        } else {
-            $supabase->insert('blogs', array(
-                'page' => $page, 'title' => $title, 'description' => $description,
-                'content' => $content, 'published_at' => $published_at,
-                'featured_image' => $featured_image, 'display_order' => 0
-            ));
-        }
-        $saved = true;
-    } elseif ($action === 'delete') {
-        $id = $_POST['id'] ?? '';
-        if ($id) $supabase->delete('blogs', array('id' => 'eq.' . $id));
-        $saved = true;
-    } elseif ($action === 'upload_featured') {
-        header('Content-Type: application/json');
-        if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
-            $file = $_FILES['image'];
-            $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-            if (in_array($ext, array('jpg', 'jpeg', 'png', 'webp', 'gif'))) {
-                $filename = 'blog-feat-' . time() . '-' . substr(md5(mt_rand()), 0, 8) . '.' . $ext;
-                $dest = __DIR__ . '/../media/' . $filename;
-                if (move_uploaded_file($file['tmp_name'], $dest)) {
-                    echo json_encode(array('location' => 'media/' . $filename));
-                    exit;
+            $data = array(
+                'page' => $page,
+                'title' => $title,
+                'content' => $content,
+                'description' => $description,
+                'published_at' => $published_at,
+                'featured_image' => $featured_image
+            );
+
+            if ($id) {
+                $supabase->update('blogs', $data, array('id' => 'eq.' . $id));
+            } else {
+                $data['display_order'] = 0;
+                $supabase->insert('blogs', $data);
+            }
+            $saved = true;
+        } elseif ($action === 'delete') {
+            $id = $_POST['id'] ?? '';
+            if ($id) $supabase->delete('blogs', array('id' => 'eq.' . $id));
+            $saved = true;
+        } elseif ($action === 'upload_featured') {
+            header('Content-Type: application/json');
+            if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
+                $ext = strtolower(pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION));
+                if (in_array($ext, array('jpg', 'jpeg', 'png', 'webp', 'gif'))) {
+                    $filename = 'blog-feat-' . time() . '-' . substr(md5(mt_rand()), 0, 8) . '.' . $ext;
+                    $dest = __DIR__ . '/../media/' . $filename;
+                    if (move_uploaded_file($_FILES['image']['tmp_name'], $dest)) {
+                        echo json_encode(array('location' => 'media/' . $filename));
+                        exit;
+                    }
                 }
             }
+            http_response_code(400);
+            echo json_encode(array('error' => 'Upload failed'));
+            exit;
         }
-        http_response_code(400);
-        echo json_encode(array('error' => 'Upload failed'));
-        exit;
-    } elseif ($action === 'upload_image') {
-        header('Content-Type: application/json');
-        if (isset($_FILES['file']) && $_FILES['file']['error'] === UPLOAD_ERR_OK) {
-            $file = $_FILES['file'];
-            $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-            if (in_array($ext, array('jpg', 'jpeg', 'png', 'webp', 'gif'))) {
-                $filename = 'blog-content-' . time() . '-' . substr(md5(mt_rand()), 0, 8) . '.' . $ext;
-                $dest = __DIR__ . '/../media/' . $filename;
-                if (move_uploaded_file($file['tmp_name'], $dest)) {
-                    echo json_encode(array('url' => '/media/' . $filename));
-                    exit;
-                }
-            }
-        }
-        http_response_code(400);
-        echo json_encode(array('error' => 'Upload failed'));
-        exit;
+    } catch (\Exception $e) {
+        $error = $e->getMessage();
     }
 }
 
@@ -86,7 +77,6 @@ $page_title = ($lang === 'en') ? 'Jaunumi (EN)' : 'Jaunumi (LV)';
     <title><?= $page_title ?> - Admin</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
     <link rel="stylesheet" href="css/admin.css?v=<?= filemtime(__DIR__ . '/css/admin.css') ?>">
-    <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
 </head>
 <body>
 <div class="admin-layout">
@@ -102,6 +92,9 @@ $page_title = ($lang === 'en') ? 'Jaunumi (EN)' : 'Jaunumi (LV)';
         <?php if ($saved): ?>
             <div class="page-content"><div class="msg msg-success">Saglabāts veiksmīgi!</div></div>
         <?php endif; ?>
+        <?php if ($error): ?>
+            <div class="page-content"><div class="msg msg-error">Kļūda: <?= htmlspecialchars($error) ?></div></div>
+        <?php endif; ?>
 
         <div class="lang-tabs">
             <a href="?lang=lv" class="tab <?= $lang === 'lv' ? 'active' : '' ?>">LV</a>
@@ -114,7 +107,7 @@ $page_title = ($lang === 'en') ? 'Jaunumi (EN)' : 'Jaunumi (LV)';
             <?php foreach ($blogs as $blog): ?>
                 <div class="card" style="display:flex;gap:16px;padding:16px;align-items:center;margin-bottom:12px">
                     <?php if (!empty($blog['featured_image'])): ?>
-                        <img src="/<?= htmlspecialchars($blog['featured_image']) ?>" style="width:80px;height:80px;object-fit:cover;border-radius:var(--radius)">
+                        <img src="/<?= htmlspecialchars($blog['featured_image']) ?>" alt="" style="width:80px;height:80px;object-fit:cover;border-radius:var(--radius)">
                     <?php else: ?>
                         <div style="width:80px;height:80px;border-radius:var(--radius);background:var(--bg3);display:flex;align-items:center;justify-content:center;color:var(--text-muted)"><i class="fa-solid fa-image"></i></div>
                     <?php endif; ?>
@@ -176,10 +169,9 @@ $page_title = ($lang === 'en') ? 'Jaunumi (EN)' : 'Jaunumi (LV)';
             </div>
 
             <div class="form-group">
-                <label>Saturs</label>
-                <div id="quillEditor" style="min-height:200px;background:#fff"></div>
+                <label>Saturs (HTML)</label>
+                <textarea name="content" id="blogContent" rows="15" style="font-family:monospace;font-size:14px;line-height:1.5;resize:vertical" placeholder="Ievadiet saturu HTML formātā..."></textarea>
             </div>
-            <input type="hidden" name="content" id="blogContent">
 
             <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:16px">
                 <button type="button" class="btn btn-outline" id="closeModalBtn">Atcelt</button>
@@ -189,93 +181,86 @@ $page_title = ($lang === 'en') ? 'Jaunumi (EN)' : 'Jaunumi (LV)';
     </div>
 </div>
 
-<script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
 <script>
 (function() {
+    console.log('[Blogs] Script loaded');
+
     var modal = document.getElementById('blogModal');
-    var quill = null;
+    if (!modal) { console.error('[Blogs] Modal not found'); return; }
 
-    try {
-        quill = new Quill('#quillEditor', {
-            theme: 'snow',
-            modules: {
-                toolbar: [
-                    [{ 'header': [1, 2, 3, false] }],
-                    ['bold', 'italic', 'underline'],
-                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                    ['link', 'image'],
-                    ['clean']
-                ]
-            }
+    function openModal() {
+        console.log('[Blogs] Opening modal');
+        modal.style.display = 'flex';
+    }
+
+    function closeModal() {
+        console.log('[Blogs] Closing modal');
+        modal.style.display = 'none';
+    }
+
+    var addBtn = document.getElementById('addBlogBtn');
+    if (addBtn) {
+        console.log('[Blogs] Add button found');
+        addBtn.addEventListener('click', function() {
+            console.log('[Blogs] Add button clicked');
+            document.getElementById('blogId').value = '';
+            document.getElementById('blogTitle').value = '';
+            document.getElementById('blogDesc').value = '';
+            document.getElementById('blogContent').value = '';
+            document.getElementById('blogDate').value = '<?= date('Y-m-d') ?>';
+            document.getElementById('featuredImage').value = '';
+            document.getElementById('modalTitle').innerText = 'Pievienot rakstu';
+            openModal();
         });
-        quill.getModule('toolbar').addHandler('image', function() {
-            var input = document.createElement('input');
-            input.setAttribute('type', 'file');
-            input.setAttribute('accept', 'image/*');
-            input.click();
-            input.onchange = function() {
-                var file = input.files[0];
-                if (!file) return;
-                var fd = new FormData();
-                fd.append('action', 'upload_image');
-                fd.append('file', file);
-                fetch('blogs.php', { method: 'POST', body: fd })
-                    .then(function(r) { return r.json(); })
-                    .then(function(d) { if (d.url) { var range = quill.getSelection(true); quill.insertEmbed(range.index, 'image', d.url); } });
-            };
-        });
-    } catch(e) { console.warn('Quill init failed:', e); }
-
-    function openModal() { modal.style.display = 'flex'; }
-    function closeModal() { modal.style.display = 'none'; }
-
-    document.getElementById('addBlogBtn').addEventListener('click', function() {
-        document.getElementById('blogId').value = '';
-        document.getElementById('blogTitle').value = '';
-        document.getElementById('blogDesc').value = '';
-        document.getElementById('blogDate').value = '<?= date('Y-m-d') ?>';
-        document.getElementById('featuredImage').value = '';
-        if (quill) quill.setContents([]);
-        document.getElementById('modalTitle').innerText = 'Pievienot rakstu';
-        openModal();
-    });
+    } else {
+        console.error('[Blogs] Add button not found');
+    }
 
     document.querySelectorAll('.editBlogBtn').forEach(function(btn) {
         btn.addEventListener('click', function() {
+            console.log('[Blogs] Edit button clicked');
             document.getElementById('blogId').value = this.dataset.id;
             document.getElementById('blogTitle').value = this.dataset.title;
             document.getElementById('blogDesc').value = this.dataset.description;
             document.getElementById('blogDate').value = this.dataset.published_at;
             document.getElementById('featuredImage').value = this.dataset.featured_image;
-            if (quill) quill.root.innerHTML = this.dataset.content || '';
+            document.getElementById('blogContent').value = this.dataset.content || '';
             document.getElementById('modalTitle').innerText = 'Rediģēt rakstu';
             openModal();
         });
     });
 
-    document.getElementById('blogForm').addEventListener('submit', function() {
-        if (quill) document.getElementById('blogContent').value = quill.root.innerHTML;
-    });
+    var closeBtn = document.getElementById('closeModalBtn');
+    if (closeBtn) closeBtn.addEventListener('click', closeModal);
 
-    document.getElementById('closeModalBtn').addEventListener('click', closeModal);
-    modal.addEventListener('click', function(e) { if (e.target === modal) closeModal(); });
+    if (modal) {
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) closeModal();
+        });
+    }
 
-    document.getElementById('featuredFileBtn').addEventListener('click', function() {
-        document.getElementById('featuredFile').click();
-    });
-    document.getElementById('featuredFile').addEventListener('change', function() {
-        if (!this.files.length) return;
-        var fd = new FormData();
-        fd.append('action', 'upload_featured');
-        fd.append('image', this.files[0]);
-        fetch('blogs.php', { method: 'POST', body: fd })
-            .then(function(r) { return r.json(); })
-            .then(function(d) { if (d.location) document.getElementById('featuredImage').value = d.location; })
-            .catch(function() { alert('Kļūda augšupielādējot attēlu'); });
-    });
+    var featBtn = document.getElementById('featuredFileBtn');
+    var featFile = document.getElementById('featuredFile');
+    if (featBtn && featFile) {
+        featBtn.addEventListener('click', function() { featFile.click(); });
+        featFile.addEventListener('change', function() {
+            if (!this.files.length) return;
+            var fd = new FormData();
+            fd.append('action', 'upload_featured');
+            fd.append('image', this.files[0]);
+            fetch('blogs.php', { method: 'POST', body: fd })
+                .then(function(r) { return r.json(); })
+                .then(function(d) { if (d.location) document.getElementById('featuredImage').value = d.location; })
+                .catch(function() { alert('Kļūda augšupielādējot attēlu'); });
+        });
+    }
 
-    document.getElementById('sidebarToggle').addEventListener('click', function() { document.getElementById('adminSidebar').classList.add('open'); });
-    document.getElementById('sidebarClose').addEventListener('click', function() { document.getElementById('adminSidebar').classList.remove('open'); });
+    var sbToggle = document.getElementById('sidebarToggle');
+    var sbClose = document.getElementById('sidebarClose');
+    if (sbToggle) sbToggle.addEventListener('click', function() { document.getElementById('adminSidebar').classList.add('open'); });
+    if (sbClose) sbClose.addEventListener('click', function() { document.getElementById('adminSidebar').classList.remove('open'); });
+
+    console.log('[Blogs] Script initialized');
 })();
 </script>
 </body>
