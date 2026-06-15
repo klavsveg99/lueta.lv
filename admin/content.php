@@ -314,6 +314,7 @@ $page_title = 'Satura redaktors';
         <div class="page-tabs" id="sectionTabs">
             <a href="?section=all&amp;lang=<?= $lang ?>" class="tab <?= $section_filter === 'all' ? 'active' : '' ?>">Visi</a>
             <a href="?section=hero&amp;lang=<?= $lang ?>" class="tab <?= $section_filter === 'hero' ? 'active' : '' ?>">Hero</a>
+            <a href="?section=blog&amp;lang=<?= $lang ?>" class="tab <?= $section_filter === 'blog' ? 'active' : '' ?>">Jaunumi</a>
             <a href="?section=about&amp;lang=<?= $lang ?>" class="tab <?= $section_filter === 'about' ? 'active' : '' ?>">Par mani</a>
             <a href="?section=stats&amp;lang=<?= $lang ?>" class="tab <?= $section_filter === 'stats' ? 'active' : '' ?>">Statistika</a>
             <a href="?section=services&amp;lang=<?= $lang ?>" class="tab <?= $section_filter === 'services' ? 'active' : '' ?>">Pakalpojumi</a>
@@ -322,7 +323,6 @@ $page_title = 'Satura redaktors';
             <a href="?section=testimonials&amp;lang=<?= $lang ?>" class="tab <?= $section_filter === 'testimonials' ? 'active' : '' ?>">Atsauksmes</a>
             <a href="?section=contact&amp;lang=<?= $lang ?>" class="tab <?= $section_filter === 'contact' ? 'active' : '' ?>">Kontakti</a>
             <a href="?section=footer&amp;lang=<?= $lang ?>" class="tab <?= $section_filter === 'footer' ? 'active' : '' ?>">Kājene</a>
-            <a href="?section=blog&amp;lang=<?= $lang ?>" class="tab <?= $section_filter === 'blog' ? 'active' : '' ?>">Blog</a>
             <a href="?section=images&amp;lang=<?= $lang ?>" class="tab <?= $section_filter === 'images' ? 'active' : '' ?>">Attēli</a>
         </div>
 
@@ -345,7 +345,7 @@ $page_title = 'Satura redaktors';
                             'testimonials' => 'Atsauksmju sadaļa',
                             'contact' => 'Kontaktu sadaļa',
                             'footer' => 'Kājene',
-                            'blog' => 'Blog sadaļa',
+                            'blog' => 'Jaunumi sadaļa',
                         );
                         echo $labels[$section] ?? $section;
                     ?></h2>

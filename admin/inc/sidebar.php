@@ -8,7 +8,7 @@
         <a href="services.php?lang=lv" class="<?= strpos($_SERVER['PHP_SELF'], 'services.php') !== false ? 'active' : '' ?>">Pakalpojumi</a>
         <a href="testimonials.php?lang=lv" class="<?= strpos($_SERVER['PHP_SELF'], 'testimonials.php') !== false ? 'active' : '' ?>">Atsauksmes</a>
         <a href="experience.php?lang=lv" class="<?= strpos($_SERVER['PHP_SELF'], 'experience.php') !== false ? 'active' : '' ?>">Pieredze</a>
-        <a href="blogs.php?lang=lv" class="<?= strpos($_SERVER['PHP_SELF'], 'blogs.php') !== false ? 'active' : '' ?>">Blogi</a>
+        <a href="blogs.php?lang=lv" class="<?= strpos($_SERVER['PHP_SELF'], 'blogs.php') !== false ? 'active' : '' ?>">Jaunumi</a>
         <a href="submissions.php" class="<?= strpos($_SERVER['PHP_SELF'], 'submissions.php') !== false ? 'active' : '' ?>">Kontaktforma</a>
         <hr>
         <a href="/" target="_blank">Skatīt vietni</a>
