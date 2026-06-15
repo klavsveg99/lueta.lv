@@ -350,7 +350,7 @@
 
     var desc = document.createElement('p');
     desc.className = 'section-desc reveal reveal-delay-2';
-    desc.innerText = window.cmsBlocks && window.cmsBlocks.blog_desc ? window.cmsBlocks.blog_desc : (page === 'en' ? 'Insights, stories and updates from my journey.' : 'Iedvesma, stāsti un atjauninājumi no manas ceļojuma.');
+    desc.innerText = window.cmsBlocks && window.cmsBlocks.blog_desc ? window.cmsBlocks.blog_desc : (page === 'en' ? 'Insights, stories and news from my journey.' : 'Iedvesma, stāsti un jaunumi no mana ceļojuma.');
     desc.style.maxWidth = '600px';
     desc.style.margin = '12px auto 0';
     desc.style.color = 'var(--text-muted)';

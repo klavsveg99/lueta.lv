@@ -136,8 +136,8 @@ function getBlockDefinitions()
                 'placeholder' => 'Blogs',
                 'placeholder_en' => 'Blog'),
             'blog_desc' => array('label' => 'Satura apraksts', 'type' => 'textarea',
-                'placeholder' => 'Iedvesma, stāsti un atjauninājumi no manas ceļojuma.',
-                'placeholder_en' => 'Insights, stories and updates from my journey.'),
+                'placeholder' => 'Iedvesma, stāsti un jaunumi no mana ceļojuma.',
+                'placeholder_en' => 'Insights, stories and news from my journey.'),
         ),
     );
 }
