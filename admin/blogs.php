@@ -26,13 +26,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $supabase->update('blogs', $data, array('id' => 'eq.' . $id));
         } else {
             $supabase->insert('blogs', array(
-                'page' => $page,
-                'title' => $title,
-                'description' => $description,
-                'content' => $content,
-                'published_at' => $published_at,
-                'featured_image' => $featured_image,
-                'display_order' => 0
+                'page' => $page, 'title' => $title, 'description' => $description,
+                'content' => $content, 'published_at' => $published_at,
+                'featured_image' => $featured_image, 'display_order' => 0
             ));
         }
         $saved = true;
@@ -42,10 +38,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $saved = true;
     } elseif ($action === 'upload_featured') {
         header('Content-Type: application/json');
-        if (isset($_FILES['image'])) {
+        if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
             $file = $_FILES['image'];
             $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-            if (in_array($ext, array('jpg', 'jpeg', 'png', 'webp', 'gif')) && $file['error'] === UPLOAD_ERR_OK) {
+            if (in_array($ext, array('jpg', 'jpeg', 'png', 'webp', 'gif'))) {
                 $filename = 'blog-feat-' . time() . '-' . substr(md5(mt_rand()), 0, 8) . '.' . $ext;
                 $dest = __DIR__ . '/../media/' . $filename;
                 if (move_uploaded_file($file['tmp_name'], $dest)) {
@@ -59,14 +55,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     } elseif ($action === 'upload_image') {
         header('Content-Type: application/json');
-        if (isset($_FILES['file'])) {
+        if (isset($_FILES['file']) && $_FILES['file']['error'] === UPLOAD_ERR_OK) {
             $file = $_FILES['file'];
             $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-            if (in_array($ext, array('jpg', 'jpeg', 'png', 'webp', 'gif')) && $file['error'] === UPLOAD_ERR_OK) {
+            if (in_array($ext, array('jpg', 'jpeg', 'png', 'webp', 'gif'))) {
                 $filename = 'blog-content-' . time() . '-' . substr(md5(mt_rand()), 0, 8) . '.' . $ext;
                 $dest = __DIR__ . '/../media/' . $filename;
                 if (move_uploaded_file($file['tmp_name'], $dest)) {
-                    echo json_encode(array('url' => '/' . 'media/' . $filename));
+                    echo json_encode(array('url' => '/media/' . $filename));
                     exit;
                 }
             }
@@ -80,7 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $blogs = $supabase->select('blogs', array('page' => 'eq.' . $page, 'select' => '*', 'order' => 'published_at.desc'));
 if (!is_array($blogs)) $blogs = array();
 
-$page_title = ($lang === 'en') ? 'Blog (EN)' : 'Blogi (LV)';
+$page_title = ($lang === 'en') ? 'Jaunumi (EN)' : 'Jaunumi (LV)';
 ?>
 <!DOCTYPE html>
 <html lang="lv">
@@ -113,43 +109,41 @@ $page_title = ($lang === 'en') ? 'Blog (EN)' : 'Blogi (LV)';
         </div>
 
         <div class="page-content">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
-                <h2>Raksti</h2>
-                <button class="btn btn-primary" id="addBlogBtn"><i class="fa-solid fa-plus"></i> Pievienot rakstu</button>
-            </div>
+            <button class="btn btn-primary" id="addBlogBtn" style="margin-bottom:24px"><i class="fa-solid fa-plus"></i> Pievienot rakstu</button>
 
-            <div class="blog-list">
-                <?php foreach ($blogs as $blog): ?>
-                    <div class="card" style="display:flex;gap:16px;padding:16px;align-items:center">
-                        <?php if (!empty($blog['featured_image'])): ?>
-                            <img src="/<?= htmlspecialchars($blog['featured_image']) ?>" style="width:80px;height:80px;object-fit:cover;border-radius:var(--radius)">
-                        <?php else: ?>
-                            <div style="width:80px;height:80px;border-radius:var(--radius);background:var(--bg3);display:flex;align-items:center;justify-content:center;color:var(--text-muted)"><i class="fa-solid fa-image"></i></div>
-                        <?php endif; ?>
-                        <div style="flex:1">
-                            <h3 style="margin:0"><?= htmlspecialchars($blog['title']) ?></h3>
-                            <div style="font-size:13px;color:var(--text-muted);margin-top:4px">Publicēts: <?= htmlspecialchars($blog['published_at']) ?></div>
-                        </div>
-                        <div style="display:flex;gap:8px">
-                            <button class="btn btn-outline btn-sm edit-blog-btn" data-id="<?= htmlspecialchars($blog['id']) ?>" data-title="<?= htmlspecialchars($blog['title']) ?>" data-description="<?= htmlspecialchars($blog['description'] ?? '') ?>" data-content='<?= htmlspecialchars($blog['content'] ?? '', ENT_QUOTES) ?>' data-published_at="<?= htmlspecialchars($blog['published_at']) ?>" data-featured_image="<?= htmlspecialchars($blog['featured_image'] ?? '') ?>">Rediģēt</button>
-                            <form method="POST" style="display:inline" onsubmit="return confirm('Dzēst šo rakstu?')">
-                                <input type="hidden" name="action" value="delete">
-                                <input type="hidden" name="id" value="<?= $blog['id'] ?>">
-                                <button type="submit" class="btn btn-danger btn-sm"><i class="fa-solid fa-trash"></i></button>
-                            </form>
-                        </div>
+            <?php foreach ($blogs as $blog): ?>
+                <div class="card" style="display:flex;gap:16px;padding:16px;align-items:center;margin-bottom:12px">
+                    <?php if (!empty($blog['featured_image'])): ?>
+                        <img src="/<?= htmlspecialchars($blog['featured_image']) ?>" style="width:80px;height:80px;object-fit:cover;border-radius:var(--radius)">
+                    <?php else: ?>
+                        <div style="width:80px;height:80px;border-radius:var(--radius);background:var(--bg3);display:flex;align-items:center;justify-content:center;color:var(--text-muted)"><i class="fa-solid fa-image"></i></div>
+                    <?php endif; ?>
+                    <div style="flex:1">
+                        <h3 style="margin:0"><?= htmlspecialchars($blog['title']) ?></h3>
+                        <div style="font-size:13px;color:var(--text-muted);margin-top:4px">Publicēts: <?= htmlspecialchars($blog['published_at']) ?></div>
                     </div>
-                <?php endforeach; ?>
-                <?php if (empty($blogs)): ?>
-                    <div class="card"><p class="text-muted">Nav rakstu. Pievienojiet pirmo!</p></div>
-                <?php endif; ?>
-            </div>
+                    <div style="display:flex;gap:8px">
+                        <button class="btn btn-outline btn-sm editBlogBtn"
+                            data-id="<?= htmlspecialchars($blog['id']) ?>"
+                            data-title="<?= htmlspecialchars($blog['title']) ?>"
+                            data-description="<?= htmlspecialchars($blog['description'] ?? '') ?>"
+                            data-content="<?= htmlspecialchars($blog['content'] ?? '', ENT_QUOTES) ?>"
+                            data-published_at="<?= htmlspecialchars($blog['published_at']) ?>"
+                            data-featured_image="<?= htmlspecialchars($blog['featured_image'] ?? '') ?>">Rediģēt</button>
+                        <form method="POST" style="display:inline" onsubmit="return confirm('Dzēst šo rakstu?')">
+                            <input type="hidden" name="action" value="delete">
+                            <input type="hidden" name="id" value="<?= $blog['id'] ?>">
+                            <button type="submit" class="btn btn-danger btn-sm"><i class="fa-solid fa-trash"></i></button>
+                        </form>
+                    </div>
+                </div>
+            <?php endforeach; ?>
         </div>
     </main>
 </div>
 
-<div class="modal-overlay" id="blogModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1000;align-items:center;justify-content:center">
-    <div class="modal-card" style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:24px;max-width:800px;width:90%;max-height:90vh;overflow-y:auto">
+<div id="blogModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1000;align-items:center;justify-content:center">
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:24px;max-width:800px;width:90%;max-height:90vh;overflow-y:auto">
         <h2 id="modalTitle">Pievienot rakstu</h2>
         <form method="POST" id="blogForm" style="display:flex;flex-direction:column;gap:16px">
             <input type="hidden" name="action" value="save">
@@ -173,8 +167,8 @@ $page_title = ($lang === 'en') ? 'Blog (EN)' : 'Blogi (LV)';
                 </div>
                 <div class="form-group" style="flex:1">
                     <label>Galvenais attēls</label>
+                    <input type="file" id="featuredFile" accept="image/*" style="display:none">
                     <div style="display:flex;gap:8px;align-items:center">
-                        <input type="file" id="featuredFile" accept="image/*" style="display:none">
                         <button type="button" class="btn btn-outline btn-sm" id="featuredFileBtn"><i class="fa-solid fa-image"></i> Izvēlēties</button>
                         <input type="text" name="featured_image" id="featuredImage" readonly placeholder="Nav izvēlēts" style="flex:1">
                     </div>
@@ -183,12 +177,12 @@ $page_title = ($lang === 'en') ? 'Blog (EN)' : 'Blogi (LV)';
 
             <div class="form-group">
                 <label>Saturs</label>
-                <div id="quillEditor" style="min-height:200px;background:#fff;border:1px solid var(--border);border-radius:var(--radius)"></div>
+                <div id="quillEditor" style="min-height:200px;background:#fff"></div>
             </div>
             <input type="hidden" name="content" id="blogContent">
 
             <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:16px">
-                <button type="button" class="btn btn-outline" id="closeModal">Atcelt</button>
+                <button type="button" class="btn btn-outline" id="closeModalBtn">Atcelt</button>
                 <button type="submit" class="btn btn-primary"><i class="fa-solid fa-check"></i> Saglabāt</button>
             </div>
         </form>
@@ -197,93 +191,92 @@ $page_title = ($lang === 'en') ? 'Blog (EN)' : 'Blogi (LV)';
 
 <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
 <script>
-var quill = new Quill('#quillEditor', {
-    theme: 'snow',
-    modules: {
-        toolbar: [
-            [{ 'header': [1, 2, 3, false] }],
-            ['bold', 'italic', 'underline'],
-            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-            ['link', 'image'],
-            ['clean']
-        ]
-    }
-});
+(function() {
+    var modal = document.getElementById('blogModal');
+    var quill = null;
 
-var quillImageHandler = function() {
-    var input = document.createElement('input');
-    input.setAttribute('type', 'file');
-    input.setAttribute('accept', 'image/*');
-    input.click();
-    input.onchange = function() {
-        var file = input.files[0];
-        if (!file) return;
-        var fd = new FormData();
-        fd.append('action', 'upload_image');
-        fd.append('file', file);
-        fetch('blogs.php', { method: 'POST', body: fd })
-            .then(function(res) { return res.json(); })
-            .then(function(data) {
-                if (data.url) {
-                    var range = quill.getSelection(true);
-                    quill.insertEmbed(range.index, 'image', data.url);
-                }
-            });
-    };
-};
-quill.getModule('toolbar').addHandler('image', quillImageHandler);
+    try {
+        quill = new Quill('#quillEditor', {
+            theme: 'snow',
+            modules: {
+                toolbar: [
+                    [{ 'header': [1, 2, 3, false] }],
+                    ['bold', 'italic', 'underline'],
+                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                    ['link', 'image'],
+                    ['clean']
+                ]
+            }
+        });
+        quill.getModule('toolbar').addHandler('image', function() {
+            var input = document.createElement('input');
+            input.setAttribute('type', 'file');
+            input.setAttribute('accept', 'image/*');
+            input.click();
+            input.onchange = function() {
+                var file = input.files[0];
+                if (!file) return;
+                var fd = new FormData();
+                fd.append('action', 'upload_image');
+                fd.append('file', file);
+                fetch('blogs.php', { method: 'POST', body: fd })
+                    .then(function(r) { return r.json(); })
+                    .then(function(d) { if (d.url) { var range = quill.getSelection(true); quill.insertEmbed(range.index, 'image', d.url); } });
+            };
+        });
+    } catch(e) { console.warn('Quill init failed:', e); }
 
-document.getElementById('addBlogBtn').addEventListener('click', function() {
-    document.getElementById('blogId').value = '';
-    document.getElementById('blogTitle').value = '';
-    document.getElementById('blogDesc').value = '';
-    document.getElementById('blogDate').value = '<?= date('Y-m-d') ?>';
-    document.getElementById('featuredImage').value = '';
-    quill.setContents([]);
-    document.getElementById('modalTitle').innerText = 'Pievienot rakstu';
-    document.getElementById('blogModal').style.display = 'flex';
-});
+    function openModal() { modal.style.display = 'flex'; }
+    function closeModal() { modal.style.display = 'none'; }
 
-document.querySelectorAll('.edit-blog-btn').forEach(function(btn) {
-    btn.addEventListener('click', function() {
-        document.getElementById('blogId').value = this.dataset.id;
-        document.getElementById('blogTitle').value = this.dataset.title;
-        document.getElementById('blogDesc').value = this.dataset.description;
-        document.getElementById('blogDate').value = this.dataset.published_at;
-        document.getElementById('featuredImage').value = this.dataset.featured_image;
-        quill.root.innerHTML = this.dataset.content || '';
-        document.getElementById('modalTitle').innerText = 'Rediģēt rakstu';
-        document.getElementById('blogModal').style.display = 'flex';
+    document.getElementById('addBlogBtn').addEventListener('click', function() {
+        document.getElementById('blogId').value = '';
+        document.getElementById('blogTitle').value = '';
+        document.getElementById('blogDesc').value = '';
+        document.getElementById('blogDate').value = '<?= date('Y-m-d') ?>';
+        document.getElementById('featuredImage').value = '';
+        if (quill) quill.setContents([]);
+        document.getElementById('modalTitle').innerText = 'Pievienot rakstu';
+        openModal();
     });
-});
 
-document.getElementById('blogForm').addEventListener('submit', function() {
-    document.getElementById('blogContent').value = quill.root.innerHTML;
-});
+    document.querySelectorAll('.editBlogBtn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            document.getElementById('blogId').value = this.dataset.id;
+            document.getElementById('blogTitle').value = this.dataset.title;
+            document.getElementById('blogDesc').value = this.dataset.description;
+            document.getElementById('blogDate').value = this.dataset.published_at;
+            document.getElementById('featuredImage').value = this.dataset.featured_image;
+            if (quill) quill.root.innerHTML = this.dataset.content || '';
+            document.getElementById('modalTitle').innerText = 'Rediģēt rakstu';
+            openModal();
+        });
+    });
 
-document.getElementById('closeModal').addEventListener('click', function() {
-    document.getElementById('blogModal').style.display = 'none';
-});
-document.getElementById('blogModal').addEventListener('click', function(e) {
-    if (e.target === this) this.style.display = 'none';
-});
+    document.getElementById('blogForm').addEventListener('submit', function() {
+        if (quill) document.getElementById('blogContent').value = quill.root.innerHTML;
+    });
 
-document.getElementById('featuredFileBtn').addEventListener('click', function() {
-    document.getElementById('featuredFile').click();
-});
-document.getElementById('featuredFile').addEventListener('change', function() {
-    if (!this.files.length) return;
-    var fd = new FormData();
-    fd.append('action', 'upload_featured');
-    fd.append('image', this.files[0]);
-    fetch('blogs.php', { method: 'POST', body: fd })
-        .then(function(res) { return res.json(); })
-        .then(function(data) { if (data.location) document.getElementById('featuredImage').value = data.location; })
-        .catch(function() { alert('Kļūda augšupielādējot attēlu'); });
-});
+    document.getElementById('closeModalBtn').addEventListener('click', closeModal);
+    modal.addEventListener('click', function(e) { if (e.target === modal) closeModal(); });
 
-document.getElementById('sidebarToggle').addEventListener('click', function() { document.getElementById('adminSidebar').classList.add('open'); });
-document.getElementById('sidebarClose').addEventListener('click', function() { document.getElementById('adminSidebar').classList.remove('open'); });
+    document.getElementById('featuredFileBtn').addEventListener('click', function() {
+        document.getElementById('featuredFile').click();
+    });
+    document.getElementById('featuredFile').addEventListener('change', function() {
+        if (!this.files.length) return;
+        var fd = new FormData();
+        fd.append('action', 'upload_featured');
+        fd.append('image', this.files[0]);
+        fetch('blogs.php', { method: 'POST', body: fd })
+            .then(function(r) { return r.json(); })
+            .then(function(d) { if (d.location) document.getElementById('featuredImage').value = d.location; })
+            .catch(function() { alert('Kļūda augšupielādējot attēlu'); });
+    });
+
+    document.getElementById('sidebarToggle').addEventListener('click', function() { document.getElementById('adminSidebar').classList.add('open'); });
+    document.getElementById('sidebarClose').addEventListener('click', function() { document.getElementById('adminSidebar').classList.remove('open'); });
+})();
 </script>
 </body>
 </html>
