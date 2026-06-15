@@ -342,11 +342,11 @@
 
     var tag = document.createElement('div');
     tag.className = 'section-tag reveal';
-    tag.innerText = window.cmsBlocks && window.cmsBlocks.blog_tag ? window.cmsBlocks.blog_tag : (page === 'en' ? 'Latest' : 'Jaunumi');
+    tag.innerText = window.cmsBlocks && window.cmsBlocks.blog_tag ? window.cmsBlocks.blog_tag : 'Blog';
 
     var title = document.createElement('h2');
     title.className = 'section-title reveal reveal-delay-1';
-    title.innerText = window.cmsBlocks && window.cmsBlocks.blog_title ? window.cmsBlocks.blog_title : 'Blog';
+    title.innerText = window.cmsBlocks && window.cmsBlocks.blog_title ? window.cmsBlocks.blog_title : (page === 'en' ? 'Latest' : 'Jaunumi');
 
     var desc = document.createElement('p');
     desc.className = 'section-desc reveal reveal-delay-2';
