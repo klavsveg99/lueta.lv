@@ -80,7 +80,7 @@ if (!is_array($related) || isset($related['error'])) $related = array();
         </nav>
     </header>
 
-    <main class="page-content" style="padding-top:120px; max-width:800px; margin:0 auto">
+    <main class="page-content" style="padding:120px 20px 40px; max-width:840px; margin:0 auto">
         <a href="<?= $lang === 'en' ? 'en.html' : 'index.html' ?>" class="btn-outline" style="display:inline-block; margin-bottom:24px; text-decoration:none"><i class="fa-solid fa-arrow-left"></i> <?= $back_text ?></a>
         
         <article class="blog-post">
@@ -95,7 +95,7 @@ if (!is_array($related) || isset($related['error'])) $related = array();
                 </div>
             <?php endif; ?>
             
-            <div class="blog-content" style="line-height:1.8; font-size:18px; color:var(--text)">
+            <div class="blog-content" style="line-height:1.8; font-size:18px; color:var(--text);overflow:hidden">
                 <?= $post['content'] ?>
             </div>
         </article>
@@ -122,6 +122,7 @@ if (!is_array($related) || isset($related['error'])) $related = array();
         <?php endif; ?>
     </main>
 
+    <style>.blog-content img{max-width:100%;height:auto;border-radius:var(--radius)}</style>
     <footer style="padding:40px 0; text-align:center; color:var(--text-muted); font-size:14px">
         &copy; <?= date('Y') ?> Lueta Dzirniece. All rights reserved.
     </footer>
