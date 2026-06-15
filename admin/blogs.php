@@ -4,16 +4,22 @@ require_once 'inc/auth.php';
 require_once 'inc/functions.php';
 if (!isLoggedIn()) { header('Location: index.php'); exit; }
 
-$supabase = getSupabase();
-$lang = $_GET['lang'] ?? $_POST['lang'] ?? 'lv';
-if (!in_array($lang, ['lv', 'en'])) $lang = 'lv';
-$page = ($lang === 'en') ? 'en' : 'index';
+$supabase = null;
+$lang = 'lv';
+$page = 'index';
+$php_error = null;
 $error = null;
 $saved = false;
+$blogs = array();
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $action = $_POST['action'] ?? '';
-    try {
+try {
+    $supabase = getSupabase();
+    $lang = $_GET['lang'] ?? $_POST['lang'] ?? 'lv';
+    if (!in_array($lang, ['lv', 'en'])) $lang = 'lv';
+    $page = ($lang === 'en') ? 'en' : 'index';
+
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $action = $_POST['action'] ?? '';
         if ($action === 'save') {
             $id = $_POST['id'] ?? '';
             $title = trim($_POST['title'] ?? '');
@@ -23,11 +29,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $featured_image = $_POST['featured_image'] ?? '';
 
             $data = array(
-                'page' => $page,
-                'title' => $title,
-                'content' => $content,
-                'description' => $description,
-                'published_at' => $published_at,
+                'page' => $page, 'title' => $title, 'content' => $content,
+                'description' => $description, 'published_at' => $published_at,
                 'featured_image' => $featured_image
             );
 
@@ -59,13 +62,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             echo json_encode(array('error' => 'Upload failed'));
             exit;
         }
-    } catch (\Exception $e) {
-        $error = $e->getMessage();
     }
-}
 
-$blogs = $supabase->select('blogs', array('page' => 'eq.' . $page, 'select' => '*', 'order' => 'published_at.desc'));
-if (!is_array($blogs)) $blogs = array();
+    $blogs = $supabase->select('blogs', array('page' => 'eq.' . $page, 'select' => '*', 'order' => 'published_at.desc'));
+    if (!is_array($blogs)) $blogs = array();
+} catch (\Throwable $e) {
+    $php_error = $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine();
+}
 
 $page_title = ($lang === 'en') ? 'Jaunumi (EN)' : 'Jaunumi (LV)';
 ?>
@@ -89,6 +92,9 @@ $page_title = ($lang === 'en') ? 'Jaunumi (EN)' : 'Jaunumi (LV)';
             </div>
         </div>
 
+        <?php if ($php_error): ?>
+            <div class="page-content"><div class="msg msg-error" style="white-space:pre-wrap">PHP Error: <?= htmlspecialchars($php_error) ?></div></div>
+        <?php endif; ?>
         <?php if ($saved): ?>
             <div class="page-content"><div class="msg msg-success">Saglabāts veiksmīgi!</div></div>
         <?php endif; ?>
