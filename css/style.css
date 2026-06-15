@@ -1507,11 +1507,13 @@ footer {
         background: var(--bg);
         flex-direction: column;
         justify-content: flex-start;
-        padding: 100px 24px 120px;
+        padding: 100px 24px 160px;
         gap: 10px;
         transition: left 0.3s ease;
         z-index: 1000;
         overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
         display: flex !important;
     }
     nav.active { left: 0; }
