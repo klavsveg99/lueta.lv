@@ -52,6 +52,11 @@
     return fetchJson(api + '/' + table + '?' + q + '&order=' + encodeURIComponent('display_order.asc'));
   }
 
+  function fetchBlogs() {
+    var q = encodeURIComponent('page') + '=eq.' + encodeURIComponent(page);
+    return fetchJson(api + '/blogs?' + q + '&select=id,title,featured_image,published_at&order=' + encodeURIComponent('published_at.desc'));
+  }
+
   function fetchFallbackImages() {
     return fetch('get-images.php').then(function (r) {
       if (!r.ok) throw new Error('HTTP ' + r.status);
@@ -66,6 +71,7 @@
     safe(fetchItems('services'), []),
     safe(fetchItems('testimonials'), []),
     safe(fetchItems('experiences'), []),
+    safe(fetchBlogs(), []),
     safe(fetchGlobalImages(), {}),
     safe(fetchFallbackImages(), [])
   ]);
@@ -309,6 +315,85 @@
     });
   }
 
+  function renderBlogs(items) {
+    if (!items || !items.length) return;
+    var hero = document.querySelector('.hero');
+    if (!hero) return;
+
+    var section = document.createElement('section');
+    section.className = 'blog-preview';
+    section.id = 'blog-preview';
+    section.style.padding = '60px 0';
+    section.style.backgroundColor = 'var(--bg2)';
+    
+    var container = document.createElement('div');
+    container.className = 'container';
+    
+    var header = document.createElement('div');
+    header.className = 'section-header';
+    header.style.textAlign = 'center';
+    header.style.marginBottom = '40px';
+    
+    var tag = document.createElement('div');
+    tag.className = 'section-tag reveal';
+    tag.innerText = page === 'en' ? 'Latest' : 'Jaunākais';
+    
+    var title = document.createElement('h2');
+    title.className = 'section-title reveal reveal-delay-1';
+    title.innerText = page === 'en' ? 'Blog' : 'Blogs';
+    
+    header.appendChild(tag);
+    header.appendChild(title);
+    
+    var grid = document.createElement('div');
+    grid.className = 'blog-grid';
+    grid.style.display = 'grid';
+    grid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(300px, 1fr))';
+    grid.style.gap = '30px';
+    
+    items.slice(0, 3).forEach(function (item, i) {
+      var delay = ' reveal-delay-' + (i + 1);
+      var card = document.createElement('a');
+      card.href = 'blog.php?id=' + item.id + '&lang=' + page;
+      card.className = 'blog-card reveal' + delay;
+      card.style.textDecoration = 'none';
+      card.style.color = 'var(--text)';
+      card.style.display = 'flex';
+      card.style.flexDirection = 'column';
+      card.style.gap = '16px';
+      
+      var img = document.createElement('img');
+      img.src = '/' + (item.featured_image || 'media/placeholder.jpg');
+      img.style.width = '100%';
+      img.style.aspectRatio = '16/9';
+      img.style.objectFit = 'cover';
+      img.style.borderRadius = 'var(--radius)';
+      
+      var content = document.createElement('div');
+      var h3 = document.createElement('h3');
+      h3.innerText = item.title;
+      h3.style.margin = '0 0 8px 0';
+      
+      var date = document.createElement('div');
+      date.style.fontSize = '13px';
+      date.style.color = 'var(--text-muted)';
+      date.innerText = (page === 'en' ? 'Published' : 'Publicēts') + ': ' + item.published_at;
+      
+      content.appendChild(h3);
+      content.appendChild(date);
+      card.appendChild(img);
+      card.appendChild(content);
+      grid.appendChild(card);
+    });
+    
+    container.appendChild(header);
+    container.appendChild(grid);
+    section.appendChild(container);
+    
+    hero.after(section);
+    observeReveals();
+  }
+
   function observeReveals() {
     var obs = window.__revealObserver;
     if (!obs) return;
@@ -329,8 +414,9 @@
     var services = results[1];
     var testimonials = results[2];
     var experiences = results[3];
-    var globalImages = results[4];
-    var fallbackImages = results[5];
+    var blogs = results[4];
+    var globalImages = results[5];
+    var fallbackImages = results[6];
 
     // Merge global images into blocks so they're available for the slideshow
     if (globalImages) {
@@ -342,6 +428,7 @@
       if (services && services.length) { renderServices(services); observeReveals(); }
       if (testimonials && testimonials.length) { renderTestimonials(testimonials); observeReveals(); }
       if (experiences && experiences.length) { renderExperiences(experiences); observeReveals(); }
+      if (blogs && blogs.length) { renderBlogs(blogs); }
       if (blocks) updateStats();
     });
   }).catch(function (e) { console.warn('CMS load failed:', e); });
