@@ -36,27 +36,37 @@ $related_title = ($lang === 'en') ? 'Other posts' : 'Citi raksti';
 </head>
 <body>
     <header id="header">
-        <a href="index.html" class="logo">Lueta<span>.</span></a>
+        <a href="<?= $lang === 'en' ? 'en.html' : 'index.html' ?>" class="logo">Lueta<span>.</span></a>
         <nav id="mainNav">
             <div class="nav-items-grid">
-                <a href="index.html#par">Par</a>
-                <a href="index.html#pakalpojumi">Pakalpojumi</a>
-                <a href="index.html#achievement">Sasniegumi</a>
-                <a href="index.html#pieredze">Pieredze</a>
-                <a href="blogs.php" class="nav-link">Jaunumi</a>
-                <a href="index.html#testimonials">Atsauksmes</a>
-                <a href="index.html#contact">Kontakti</a>
+                <?php if ($lang === 'en'): ?>
+                    <a href="en.html#about">About</a>
+                    <a href="en.html#services">Services</a>
+                    <a href="en.html#achievement">Achievement</a>
+                    <a href="en.html#experience">Experience</a>
+                    <a href="blogs.php?lang=en" class="nav-link">Blog</a>
+                    <a href="en.html#testimonials">Testimonials</a>
+                    <a href="en.html#contact">Contact</a>
+                <?php else: ?>
+                    <a href="index.html#par">Par</a>
+                    <a href="index.html#pakalpojumi">Pakalpojumi</a>
+                    <a href="index.html#achievement">Sasniegumi</a>
+                    <a href="index.html#pieredze">Pieredze</a>
+                    <a href="blogs.php" class="nav-link">Jaunumi</a>
+                    <a href="index.html#testimonials">Atsauksmes</a>
+                    <a href="index.html#contact">Kontakti</a>
+                <?php endif; ?>
             </div>
-            <a href="index.html#contact" class="header-cta contact-cta-btn">Sazināties</a>
+            <a href="<?= $lang === 'en' ? 'en.html#contact' : 'index.html#contact' ?>" class="header-cta contact-cta-btn"><?= $lang === 'en' ? 'Get in Touch' : 'Sazināties' ?></a>
             <div class="lang-switch">
-                <a href="index.html" class="<?= $lang === 'lv' ? 'active' : '' ?>">LV</a>
-                <a href="en.html" class="<?= $lang === 'en' ? 'active' : '' ?>">EN</a>
+                <a href="blog.php?id=<?= $id ?>&lang=lv" class="<?= $lang === 'lv' ? 'active' : '' ?>">LV</a>
+                <a href="blog.php?id=<?= $id ?>&lang=en" class="<?= $lang === 'en' ? 'active' : '' ?>">EN</a>
             </div>
         </nav>
     </header>
 
     <main class="page-content" style="padding-top:120px; max-width:800px; margin:0 auto">
-        <a href="index.html" class="btn-outline" style="display:inline-block; margin-bottom:24px; text-decoration:none"><i class="fa-solid fa-arrow-left"></i> <?= $back_text ?></a>
+        <a href="<?= $lang === 'en' ? 'en.html' : 'index.html' ?>" class="btn-outline" style="display:inline-block; margin-bottom:24px; text-decoration:none"><i class="fa-solid fa-arrow-left"></i> <?= $back_text ?></a>
         
         <article class="blog-post">
             <div class="blog-header" style="margin-bottom:40px; text-align:center">
@@ -83,11 +93,18 @@ $related_title = ($lang === 'en') ? 'Other posts' : 'Citi raksti';
             ?>
             <section class="related-posts" style="margin-top:60px; border-top:1px solid var(--border); padding-top:40px">
                 <h2 style="margin-bottom:24px; text-align:center"><?= $related_title ?></h2>
-                <div class="related-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:20px">
+                <div class="related-grid" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:20px">
                     <?php foreach ($others as $other): ?>
-                        <a href="blog.php?id=<?= $other['id'] ?>&lang=<?= $lang ?>" class="related-card" style="text-decoration:none; color:inherit; display:flex; flex-direction:column; gap:12px">
-                            <img src="/<?= htmlspecialchars($other['featured_image']) ?>" style="width:100%; aspect-ratio:16/9; object-fit:cover; border-radius:var(--radius)">
-                            <div style="font-weight:500"><?= htmlspecialchars($other['title']) ?></div>
+                        <a href="blog.php?id=<?= $other['id'] ?>&lang=<?= $lang ?>" class="related-card" style="text-decoration:none; color:inherit; display:flex; flex-direction:column; gap:12px; border-radius:var(--radius); overflow:hidden; background:var(--bg2); transition:transform 0.3s" onmouseenter="this.style.transform='translateY(-4px)'" onmouseleave="this.style.transform=''">
+                            <?php if (!empty($other['featured_image'])): ?>
+                                <img src="/<?= htmlspecialchars($other['featured_image']) ?>" style="width:100%; aspect-ratio:16/9; object-fit:cover">
+                            <?php else: ?>
+                                <div style="width:100%; aspect-ratio:16/9; background:var(--bg3); display:flex; align-items:center; justify-content:center; color:var(--text-muted)"><i class="fa-solid fa-image" style="font-size:24px"></i></div>
+                            <?php endif; ?>
+                            <div style="padding:0 16px 16px">
+                                <div style="font-size:13px; color:var(--text-muted); margin-bottom:4px"><?= $date_prefix ?>: <?= htmlspecialchars($other['published_at']) ?></div>
+                                <div style="font-weight:500"><?= htmlspecialchars($other['title']) ?></div>
+                            </div>
                         </a>
                     <?php endforeach; ?>
                 </div>

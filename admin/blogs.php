@@ -15,18 +15,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'save') {
         $id = $_POST['id'] ?? '';
         $title = trim($_POST['title'] ?? '');
+        $description = trim($_POST['description'] ?? '');
         $content = $_POST['content'] ?? '';
         $published_at = $_POST['published_at'] ?? date('Y-m-d');
         $featured_image = $_POST['featured_image'] ?? '';
 
         if ($id) {
-            $data = array('title' => $title, 'content' => $content, 'published_at' => $published_at);
+            $data = array('title' => $title, 'description' => $description, 'content' => $content, 'published_at' => $published_at);
             if ($featured_image) $data['featured_image'] = $featured_image;
             $supabase->update('blogs', $data, array('id' => 'eq.' . $id));
         } else {
             $supabase->insert('blogs', array(
                 'page' => $page,
                 'title' => $title,
+                'description' => $description,
                 'content' => $content,
                 'published_at' => $published_at,
                 'featured_image' => $featured_image,
@@ -39,19 +41,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($id) $supabase->delete('blogs', array('id' => 'eq.' . $id));
         $saved = true;
     } elseif ($action === 'upload_featured') {
+        header('Content-Type: application/json');
         if (isset($_FILES['image'])) {
             $file = $_FILES['image'];
             $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-            if (in_array($ext, array('jpg', 'jpeg', 'png', 'webp', 'gif'))) {
+            if (in_array($ext, array('jpg', 'jpeg', 'png', 'webp', 'gif')) && $file['error'] === UPLOAD_ERR_OK) {
                 $filename = 'blog-feat-' . time() . '-' . substr(md5(mt_rand()), 0, 8) . '.' . $ext;
                 $dest = __DIR__ . '/../media/' . $filename;
                 if (move_uploaded_file($file['tmp_name'], $dest)) {
-                    echo 'media/' . $filename;
+                    echo json_encode(array('location' => 'media/' . $filename));
                     exit;
                 }
             }
         }
         http_response_code(400);
+        echo json_encode(array('error' => 'Upload failed'));
+        exit;
+    } elseif ($action === 'upload_tinymce_image') {
+        header('Content-Type: application/json');
+        if (isset($_FILES['file'])) {
+            $file = $_FILES['file'];
+            $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+            if (in_array($ext, array('jpg', 'jpeg', 'png', 'webp', 'gif')) && $file['error'] === UPLOAD_ERR_OK) {
+                $filename = 'blog-content-' . time() . '-' . substr(md5(mt_rand()), 0, 8) . '.' . $ext;
+                $dest = __DIR__ . '/../media/' . $filename;
+                if (move_uploaded_file($file['tmp_name'], $dest)) {
+                    echo json_encode(array('location' => '../media/' . $filename));
+                    exit;
+                }
+            }
+        }
+        http_response_code(400);
+        echo json_encode(array('error' => 'Upload failed'));
         exit;
     }
 }
@@ -69,7 +90,6 @@ $page_title = ($lang === 'en') ? 'Blog (EN)' : 'Blogi (LV)';
     <title><?= $page_title ?> - Admin</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
     <link rel="stylesheet" href="css/admin.css?v=<?= filemtime(__DIR__ . '/css/admin.css') ?>">
-    <script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
 </head>
 <body>
 <div class="admin-layout">
@@ -110,7 +130,7 @@ $page_title = ($lang === 'en') ? 'Blog (EN)' : 'Blogi (LV)';
                             <div style="font-size:13px;color:var(--text-muted);margin-top:4px">Publicēts: <?= htmlspecialchars($blog['published_at']) ?></div>
                         </div>
                         <div style="display:flex;gap:8px">
-                            <button class="btn btn-outline btn-sm" onclick="editBlog(<?= htmlspecialchars(json_encode($blog)) ?>)">Rediģēt</button>
+                            <button class="btn btn-outline btn-sm edit-blog-btn" data-blog='<?= htmlspecialchars(json_encode($blog), ENT_QUOTES) ?>'>Rediģēt</button>
                             <form method="POST" style="display:inline" onsubmit="return confirm('Dzēst šo rakstu?')">
                                 <input type="hidden" name="action" value="delete">
                                 <input type="hidden" name="id" value="<?= $blog['id'] ?>">
@@ -130,16 +150,21 @@ $page_title = ($lang === 'en') ? 'Blog (EN)' : 'Blogi (LV)';
 <div class="modal-overlay" id="blogModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1000;align-items:center;justify-content:center">
     <div class="modal-card" style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:24px;max-width:800px;width:90%;max-height:90vh;overflow-y:auto">
         <h2 id="modalTitle">Pievienot rakstu</h2>
-        <form method="POST" style="display:flex;flex-direction:column;gap:16px">
+        <form method="POST" id="blogForm" style="display:flex;flex-direction:column;gap:16px">
             <input type="hidden" name="action" value="save">
             <input type="hidden" name="id" id="blogId">
             <input type="hidden" name="lang" value="<?= $lang ?>">
-            
+
             <div class="form-group">
                 <label>Virsraksts</label>
                 <input type="text" name="title" id="blogTitle" required placeholder="Raksta virsraksts">
             </div>
-            
+
+            <div class="form-group">
+                <label>Īss apraksts</label>
+                <textarea name="description" id="blogDesc" rows="2" placeholder="Īss apraksts priekš kartiņas"></textarea>
+            </div>
+
             <div class="form-row">
                 <div class="form-group" style="flex:1">
                     <label>Publicēšanas datums</label>
@@ -149,75 +174,98 @@ $page_title = ($lang === 'en') ? 'Blog (EN)' : 'Blogi (LV)';
                     <label>Galvenais attēls</label>
                     <div style="display:flex;gap:8px;align-items:center">
                         <input type="file" id="featuredFile" accept="image/*" style="display:none">
-                        <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('featuredFile').click()">// <i class="fa-solid fa-image"></i> Izvēlēties</button>
-                        <input type="text" name="featured_image" id="featuredImage" readonly placeholder="Neko izvēlēts" style="flex:1">
+                        <button type="button" class="btn btn-outline btn-sm" id="featuredFileBtn"><i class="fa-solid fa-image"></i> Izvēlēties</button>
+                        <input type="text" name="featured_image" id="featuredImage" readonly placeholder="Nav izvēlēts" style="flex:1">
                     </div>
                 </div>
             </div>
-            
+
             <div class="form-group">
                 <label>Saturs</label>
                 <textarea name="content" id="blogContent"></textarea>
             </div>
-            
+
             <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:16px">
                 <button type="button" class="btn btn-outline" id="closeModal">Atcelt</button>
-                <button type="submit" class="btn btn-primary">Saglabāt</button>
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-check"></i> Saglabāt</button>
             </div>
         </form>
     </div>
 </div>
 
+<script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
 <script>
+var editorReady = false;
 tinymce.init({
     selector: '#blogContent',
-    plugins: 'image link lists',
-    toolbar: 'undo redo | bold italic | alignleft aligncenter alignright | bullist numlist | link image',
+    plugins: 'image link lists code',
+    toolbar: 'undo redo | bold italic | alignleft aligncenter alignright | bullist numlist | link image code',
     menubar: false,
     height: 400,
     branding: false,
-    images_upload_url: 'blogs.php', // We handle the upload in the same file
+    images_upload_handler: function (blobInfo, success, failure) {
+        var fd = new FormData();
+        fd.append('action', 'upload_tinymce_image');
+        fd.append('file', blobInfo.blob(), blobInfo.filename());
+        fetch('blogs.php', { method: 'POST', body: fd })
+            .then(function(res) { return res.json(); })
+            .then(function(data) { if (data.location) success(data.location); else failure('Upload failed'); })
+            .catch(function() { failure('Upload failed'); });
+    },
+    setup: function() { editorReady = true; }
 });
+
+function openModal(title) {
+    document.getElementById('modalTitle').innerText = title;
+    document.getElementById('blogModal').style.display = 'flex';
+}
 
 document.getElementById('addBlogBtn').addEventListener('click', function() {
     document.getElementById('blogId').value = '';
     document.getElementById('blogTitle').value = '';
+    document.getElementById('blogDesc').value = '';
     document.getElementById('blogDate').value = '<?= date('Y-m-d') ?>';
     document.getElementById('featuredImage').value = '';
-    tinymce.get('blogContent').setContent('');
-    document.getElementById('modalTitle').innerText = 'Pievienot rakstu';
-    document.getElementById('blogModal').style.display = 'flex';
+    if (editorReady && tinymce.get('blogContent')) tinymce.get('blogContent').setContent('');
+    openModal('Pievienot rakstu');
 });
 
-function editBlog(blog) {
-    document.getElementById('blogId').value = blog.id;
-    document.getElementById('blogTitle').value = blog.title;
-    document.getElementById('blogDate').value = blog.published_at;
-    document.getElementById('featuredImage').value = blog.featured_image;
-    tinymce.get('blogContent').setContent(blog.content);
-    document.getElementById('modalTitle').innerText = 'Rediģēt rakstu';
-    document.getElementById('blogModal').style.display = 'flex';
-}
+document.querySelectorAll('.edit-blog-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+        var blog = JSON.parse(this.dataset.blog);
+        document.getElementById('blogId').value = blog.id;
+        document.getElementById('blogTitle').value = blog.title || '';
+        document.getElementById('blogDesc').value = blog.description || '';
+        document.getElementById('blogDate').value = blog.published_at || '';
+        document.getElementById('featuredImage').value = blog.featured_image || '';
+        if (editorReady && tinymce.get('blogContent')) tinymce.get('blogContent').setContent(blog.content || '');
+        openModal('Rediģēt rakstu');
+    });
+});
 
 document.getElementById('closeModal').addEventListener('click', function() {
     document.getElementById('blogModal').style.display = 'none';
 });
+document.getElementById('blogModal').addEventListener('click', function(e) {
+    if (e.target === this) this.style.display = 'none';
+});
 
+document.getElementById('featuredFileBtn').addEventListener('click', function() {
+    document.getElementById('featuredFile').click();
+});
 document.getElementById('featuredFile').addEventListener('change', function() {
     if (!this.files.length) return;
     var fd = new FormData();
     fd.append('action', 'upload_featured');
     fd.append('image', this.files[0]);
     fetch('blogs.php', { method: 'POST', body: fd })
-        .then(res => res.text())
-        .then(path => {
-            document.getElementById('featuredImage').value = path;
-        })
-        .catch(err => alert('Kļūda augšupielādējot attēlu'));
+        .then(function(res) { return res.json(); })
+        .then(function(data) { if (data.location) document.getElementById('featuredImage').value = data.location; })
+        .catch(function() { alert('Kļūda augšupielādējot attēlu'); });
 });
 
-document.getElementById('sidebarToggle').addEventListener('click', () => document.getElementById('adminSidebar').classList.add('open'));
-document.getElementById('sidebarClose').addEventListener('click', () => document.getElementById('adminSidebar').classList.remove('open'));
+document.getElementById('sidebarToggle').addEventListener('click', function() { document.getElementById('adminSidebar').classList.add('open'); });
+document.getElementById('sidebarClose').addEventListener('click', function() { document.getElementById('adminSidebar').classList.remove('open'); });
 </script>
 </body>
 </html>

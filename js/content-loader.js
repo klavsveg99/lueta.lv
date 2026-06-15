@@ -54,7 +54,7 @@
 
   function fetchBlogs() {
     var q = encodeURIComponent('page') + '=eq.' + encodeURIComponent(page);
-    return fetchJson(api + '/blogs?' + q + '&select=id,title,featured_image,published_at&order=' + encodeURIComponent('published_at.desc'));
+    return fetchJson(api + '/blogs?' + q + '&select=id,title,description,featured_image,published_at&order=' + encodeURIComponent('published_at.desc'));
   }
 
   function fetchFallbackImages() {
@@ -323,34 +323,42 @@
     var section = document.createElement('section');
     section.className = 'blog-preview';
     section.id = 'blog-preview';
-    section.style.padding = '60px 0';
-    section.style.backgroundColor = 'var(--bg2)';
-    
+    section.style.padding = '80px 0';
+    section.style.background = 'var(--bg)';
+
     var container = document.createElement('div');
     container.className = 'container';
-    
+
     var header = document.createElement('div');
     header.className = 'section-header';
     header.style.textAlign = 'center';
-    header.style.marginBottom = '40px';
-    
+    header.style.marginBottom = '48px';
+
     var tag = document.createElement('div');
     tag.className = 'section-tag reveal';
-    tag.innerText = page === 'en' ? 'Latest' : 'Jaunākais';
-    
+    tag.innerText = page === 'en' ? 'Latest' : 'Jaunumi';
+
     var title = document.createElement('h2');
     title.className = 'section-title reveal reveal-delay-1';
-    title.innerText = page === 'en' ? 'Blog' : 'Blogs';
-    
+    title.innerText = page === 'en' ? 'Blog' : 'Jaunumi';
+
+    var desc = document.createElement('p');
+    desc.className = 'section-desc reveal reveal-delay-2';
+    desc.innerText = page === 'en' ? 'Insights, stories and updates from my journey.' : 'Iedvesma, stāsti un atjauninājumi no manas ceļojuma.';
+    desc.style.maxWidth = '600px';
+    desc.style.margin = '12px auto 0';
+    desc.style.color = 'var(--text-muted)';
+
     header.appendChild(tag);
     header.appendChild(title);
-    
+    header.appendChild(desc);
+
     var grid = document.createElement('div');
     grid.className = 'blog-grid';
     grid.style.display = 'grid';
-    grid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(300px, 1fr))';
+    grid.style.gridTemplateColumns = 'repeat(3, 1fr)';
     grid.style.gap = '30px';
-    
+
     items.slice(0, 3).forEach(function (item, i) {
       var delay = ' reveal-delay-' + (i + 1);
       var card = document.createElement('a');
@@ -360,36 +368,53 @@
       card.style.color = 'var(--text)';
       card.style.display = 'flex';
       card.style.flexDirection = 'column';
-      card.style.gap = '16px';
-      
+      card.style.borderRadius = 'var(--radius)';
+      card.style.overflow = 'hidden';
+      card.style.background = 'var(--bg2)';
+      card.style.transition = 'transform 0.3s, box-shadow 0.3s';
+      card.onmouseenter = function() { this.style.transform = 'translateY(-4px)'; this.style.boxShadow = '0 12px 32px rgba(0,0,0,0.12)'; };
+      card.onmouseleave = function() { this.style.transform = ''; this.style.boxShadow = ''; };
+
       var img = document.createElement('img');
       img.src = '/' + (item.featured_image || 'media/placeholder.jpg');
       img.style.width = '100%';
       img.style.aspectRatio = '16/9';
       img.style.objectFit = 'cover';
-      img.style.borderRadius = 'var(--radius)';
-      
+
       var content = document.createElement('div');
-      var h3 = document.createElement('h3');
-      h3.innerText = item.title;
-      h3.style.margin = '0 0 8px 0';
-      
+      content.style.padding = '20px';
+
       var date = document.createElement('div');
       date.style.fontSize = '13px';
       date.style.color = 'var(--text-muted)';
+      date.style.marginBottom = '8px';
       date.innerText = (page === 'en' ? 'Published' : 'Publicēts') + ': ' + item.published_at;
-      
-      content.appendChild(h3);
+
+      var h3 = document.createElement('h3');
+      h3.innerText = item.title;
+      h3.style.margin = '0 0 8px 0';
+      h3.style.fontSize = '18px';
+      h3.style.fontWeight = '600';
+
+      var excerpt = document.createElement('p');
+      var descText = item.description || '';
+      excerpt.innerText = descText.length > 25 ? descText.substring(0, 25) + '...' : descText;
+      excerpt.style.margin = '0';
+      excerpt.style.color = 'var(--text-muted)';
+      excerpt.style.fontSize = '14px';
+
       content.appendChild(date);
+      content.appendChild(h3);
+      content.appendChild(excerpt);
       card.appendChild(img);
       card.appendChild(content);
       grid.appendChild(card);
     });
-    
+
     container.appendChild(header);
     container.appendChild(grid);
     section.appendChild(container);
-    
+
     hero.after(section);
     observeReveals();
   }
