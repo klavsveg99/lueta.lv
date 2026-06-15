@@ -171,7 +171,7 @@ $page_title = ($lang === 'en') ? 'Jaunumi (EN)' : 'Jaunumi (LV)';
 
 <div id="blogModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1000;align-items:center;justify-content:center">
     <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:24px;max-width:800px;width:90%;max-height:90vh;overflow-y:auto">
-        <h2 id="modalTitle">Pievienot rakstu</h2>
+        <h2 id="modalTitle" style="margin-bottom:20px">Pievienot rakstu</h2>
         <form method="POST" id="blogForm" style="display:flex;flex-direction:column;gap:16px">
             <input type="hidden" name="action" value="save">
             <input type="hidden" name="id" id="blogId">
