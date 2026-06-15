@@ -346,7 +346,7 @@
 
     var title = document.createElement('h2');
     title.className = 'section-title reveal reveal-delay-1';
-    title.innerText = window.cmsBlocks && window.cmsBlocks.blog_title ? window.cmsBlocks.blog_title : (page === 'en' ? 'Latest' : 'Jaunumi');
+    title.innerText = window.cmsBlocks && window.cmsBlocks.blog_title ? window.cmsBlocks.blog_title : (page === 'en' ? 'Latest news' : 'Jaunumi');
 
     var desc = document.createElement('p');
     desc.className = 'section-desc reveal reveal-delay-2';

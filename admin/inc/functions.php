@@ -134,7 +134,7 @@ function getBlockDefinitions()
                 'placeholder_en' => 'Blog'),
             'blog_title' => array('label' => 'Virsraksts', 'type' => 'text',
                 'placeholder' => 'Jaunumi',
-                'placeholder_en' => 'Latest'),
+                'placeholder_en' => 'Latest news'),
             'blog_desc' => array('label' => 'Satura apraksts', 'type' => 'textarea',
                 'placeholder' => 'Iedvesma, stāsti un jaunumi no mana ceļojuma.',
                 'placeholder_en' => 'Insights, stories and news from my journey.'),
