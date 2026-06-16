@@ -4,6 +4,44 @@ require_once __DIR__ . '/inc/functions.php';
 
 $mediaDir = __DIR__ . '/../media';
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'sync_database') {
+    header('Content-Type: application/json');
+    $supabase = getSupabase();
+
+    $heroFiles = array();
+    $missisFiles = array();
+    foreach (glob($mediaDir . '/hero-*.*') as $f) {
+        $heroFiles[] = 'media/' . basename($f);
+    }
+    foreach (glob($mediaDir . '/missis-*.*') as $f) {
+        $missisFiles[] = 'media/' . basename($f);
+    }
+    usort($heroFiles, 'strcmp');
+    usort($missisFiles, 'strcmp');
+
+    $updated = 0;
+
+    $existing = $supabase->select('content_blocks', array('page' => 'eq.index', 'block_key' => 'eq.hero_images', 'select' => 'id'));
+    $payload = array('block_value' => json_encode($heroFiles));
+    if ($existing && !isset($existing['error']) && count($existing) > 0) {
+        $supabase->update('content_blocks', $payload, array('page' => 'eq.index', 'block_key' => 'eq.hero_images'));
+    } else {
+        $supabase->insert('content_blocks', array_merge($payload, array('page' => 'index', 'block_key' => 'hero_images')));
+    }
+    $updated += count($heroFiles);
+
+    $payload = array('block_value' => json_encode(array()));
+    $existing2 = $supabase->select('content_blocks', array('page' => 'eq.index', 'block_key' => 'eq.missis_images', 'select' => 'id'));
+    if ($existing2 && !isset($existing2['error']) && count($existing2) > 0) {
+        $supabase->update('content_blocks', $payload, array('page' => 'eq.index', 'block_key' => 'eq.missis_images'));
+    } else {
+        $supabase->insert('content_blocks', array_merge($payload, array('page' => 'index', 'block_key' => 'missis_images')));
+    }
+
+    echo json_encode(array('ok' => true, 'hero' => count($heroFiles), 'missis' => 0));
+    exit;
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'upload_recovered') {
     header('Content-Type: application/json');
     if (isset($_FILES['file']) && $_FILES['file']['error'] === UPLOAD_ERR_OK) {
@@ -73,17 +111,20 @@ foreach (array('hero_images', 'missis_images') as $bk) {
             </p>
 
             <?php if (empty($missing)): ?>
-                <div style="padding:16px; background:#d4edda; border-radius:var(--radius); color:#155724">
+                <div style="padding:16px; background:#d4edda; border-radius:var(--radius); color:#155724; margin-bottom:16px">
                     <i class="fa-solid fa-check"></i> Visi attēli jau eksistē serverī.
                 </div>
+                <button class="btn btn-primary" onclick="syncDatabase()">
+                    <i class="fa-solid fa-database"></i> Sinhronizēt datubāzi ar attēliem
+                </button>
             <?php else: ?>
                 <p style="margin-bottom:16px">Trūkstošie attēli: <strong><?= count($missing) ?></strong></p>
                 <button id="recoverBtn" class="btn btn-primary" onclick="startRecovery()">
-                    <i class="fa-solid fa-download"></i> Atgūt visus (<?= count($missing) ?>)
+                    <i class="fa-solid fa-download"></i> Atgūt un sinhronizēt (<?= count($missing) ?>)
                 </button>
+            <?php endif; ?>
                 <div class="progress-bar" id="progressBar" style="display:none"><div class="progress-fill" id="progressFill"></div></div>
                 <div id="log" class="recovery-log" style="display:none; margin-top:16px"></div>
-            <?php endif; ?>
         </div>
     </main>
     <script>
@@ -121,6 +162,10 @@ foreach (array('hero_images', 'missis_images') as $bk) {
         chain.then(function() {
             log('');
             log('Gatavs! Atgūti: ' + recovered + ', Kļūdas: ' + failed, '#0f0');
+            log('Hronizēju datubāzi...', '#888');
+            return syncDatabase();
+        }).then(function() {
+            log('Datubāze sinhronizēta! Hero: visi attēli, Papildus info: tukšs.', '#28a745');
             document.getElementById('recoverBtn').innerHTML = '<i class="fa-solid fa-check"></i> Pabeigts';
         });
     }
@@ -157,6 +202,20 @@ foreach (array('hero_images', 'missis_images') as $bk) {
                 failed++;
                 log('  ✗ ' + e.message, '#dc3545');
                 updateProgress(current, total);
+            });
+    }
+    function syncDatabase() {
+        var fd = new FormData();
+        fd.append('action', 'sync_database');
+        return fetch('recover-images.php', { method: 'POST', body: fd })
+            .then(function(r) { return r.json(); })
+            .then(function(d) {
+                if (d.ok) {
+                    log('  ✓ Datubāze: Hero=' + d.hero + ' attēli, Papildus info=0', '#28a745');
+                } else {
+                    log('  ✗ Datubāzes kļūda', '#dc3545');
+                }
+                return d;
             });
     }
     </script>
