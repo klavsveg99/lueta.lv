@@ -2,7 +2,7 @@
 require_once __DIR__ . '/inc/auth.php';
 require_once __DIR__ . '/inc/functions.php';
 
-set_time_limit(300); // Increase timeout to 5 minutes
+set_time_limit(300);
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
@@ -14,46 +14,57 @@ $skipped = 0;
 $failed = 0;
 $debug = array();
 
-if (isset($_POST['optimize_all'])) {
-    $debug[] = "Starting optimization...";
-    if (!is_dir($mediaDir)) {
-        $debug[] = "Error: media directory not found at $mediaDir";
-    } else {
-        $debug[] = "Media directory found. Searching for images...";
-        $files = array();
-        $extensions = array('jpg', 'jpeg', 'png', 'webp');
-        foreach ($extensions as $ext) {
-            $files = array_merge($files, glob($mediaDir . '/*.' . $ext));
-            $files = array_merge($files, glob($mediaDir . '/*.' . strtolower($ext)));
-        }
-        
-        $debug[] = "Found " . count($files) . " images.";
-
-        foreach ($files as $file) {
-            $before = filesize($file);
-            $name = basename($file);
-            $result = optimizeImage($file);
-            $after = filesize($file);
-            if ($result) {
-                if ($after < $before) {
-                    $results[] = array('name' => $name, 'before' => $before, 'after' => $after, 'status' => 'ok');
-                    $optimized++;
-                } else {
-                    $results[] = array('name' => $name, 'before' => $before, 'after' => $after, 'status' => 'skip');
-                    $skipped++;
-                }
-            } else {
-                $results[] = array('name' => $name, 'before' => $before, 'after' => $before, 'status' => 'fail');
-                $failed++;
-            }
-        }
-    }
-}
-
 function formatSize($bytes) {
     if ($bytes >= 1048576) return round($bytes / 1048576, 2) . ' MB';
     if ($bytes >= 1024) return round($bytes / 1024, 1) . ' KB';
     return $bytes . ' B';
+}
+
+function getAllImages($dir) {
+    $images = array();
+    if (!is_dir($dir)) return $images;
+    $handle = opendir($dir);
+    if (!$handle) return $images;
+    while (($entry = readdir($handle)) !== false) {
+        if ($entry === '.' || $entry === '..') continue;
+        $path = $dir . '/' . $entry;
+        if (is_dir($path)) continue;
+        $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+        if (in_array($ext, array('jpg', 'jpeg', 'png', 'webp', 'gif'))) {
+            $images[] = $path;
+        }
+    }
+    closedir($handle);
+    sort($images);
+    return $images;
+}
+
+$allFiles = getAllImages($mediaDir);
+
+if (isset($_POST['optimize_all'])) {
+    $debug[] = "Starting optimization...";
+    $debug[] = "Media directory: $mediaDir";
+    $debug[] = "GD available: " . (extension_loaded('gd') ? 'Yes' : 'No');
+    $debug[] = "Found " . count($allFiles) . " images total.";
+
+    foreach ($allFiles as $file) {
+        $before = filesize($file);
+        $name = basename($file);
+        $result = optimizeImage($file);
+        $after = filesize($file);
+        if ($result) {
+            if ($after < $before) {
+                $results[] = array('name' => $name, 'before' => $before, 'after' => $after, 'status' => 'ok');
+                $optimized++;
+            } else {
+                $results[] = array('name' => $name, 'before' => $before, 'after' => $after, 'status' => 'skip');
+                $skipped++;
+            }
+        } else {
+            $results[] = array('name' => $name, 'before' => $before, 'after' => $before, 'status' => 'fail');
+            $failed++;
+        }
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -75,8 +86,53 @@ function formatSize($bytes) {
     </header>
     <main class="page-content" style="padding:var(--page-padding)">
         <div class="card">
+            <h2><i class="fa-solid fa-folder-open"></i> Visi faili mapē /media/</h2>
+            <p style="color:var(--text-muted); margin-bottom:16px">Šie ir visi attēlu faili, kas atrodami serverī. Ja šeit nav `hero-` vai `missis-` failu, tie nav serverī (iespējams, dzēsti pie "Reset All").</p>
+            <?php if (empty($allFiles)): ?>
+                <p style="color:#dc3545">Nav atrasts neviens attēls mapē /media/.</p>
+            <?php else: ?>
+                <table style="width:100%; border-collapse:collapse; margin-bottom:24px">
+                    <thead>
+                        <tr>
+                            <th style="text-align:left; padding:8px; border-bottom:2px solid var(--border)">Faila nosaukums</th>
+                            <th style="text-align:right; padding:8px; border-bottom:2px solid var(--border)">Lielums</th>
+                            <th style="text-align:left; padding:8px; border-bottom:2px solid var(--border)">Tips</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php
+                        $totalSize = 0;
+                        foreach ($allFiles as $f):
+                            $size = filesize($f);
+                            $totalSize += $size;
+                            $name = basename($f);
+                            $ext = strtoupper(pathinfo($f, PATHINFO_EXTENSION));
+                            $prefix = '';
+                            if (strpos($name, 'hero-') === 0) $prefix = '<span style="color:#007bff">HERO</span> ';
+                            elseif (strpos($name, 'missis-') === 0) $prefix = '<span style="color:#e83e8c">MISSIS</span> ';
+                            elseif (strpos($name, 'blog-feat-') === 0) $prefix = '<span style="color:#28a745">BLOG FEAT</span> ';
+                            elseif (strpos($name, 'blog-img-') === 0) $prefix = '<span style="color:#17a2b8">BLOG IMG</span> ';
+                            elseif (strpos($name, 'lueta-') === 0) $prefix = '<span style="color:var(--text-muted)">FALLBACK</span> ';
+                        ?>
+                        <tr>
+                            <td style="padding:6px 8px; border-bottom:1px solid var(--border); font-size:13px; font-family:monospace"><?= $prefix . htmlspecialchars($name) ?></td>
+                            <td style="padding:6px 8px; border-bottom:1px solid var(--border); text-align:right; font-size:13px"><?= formatSize($size) ?></td>
+                            <td style="padding:6px 8px; border-bottom:1px solid var(--border); font-size:13px"><?= $ext ?></td>
+                        </tr>
+                        <?php endforeach; ?>
+                        <tr>
+                            <td style="padding:8px; border-top:2px solid var(--border); font-weight:600">Kopā: <?= count($allFiles) ?> faili</td>
+                            <td style="padding:8px; border-top:2px solid var(--border); text-align:right; font-weight:600"><?= formatSize($totalSize) ?></td>
+                            <td></td>
+                        </tr>
+                    </tbody>
+                </table>
+            <?php endif; ?>
+        </div>
+
+        <div class="card" style="margin-top:24px">
             <h2><i class="fa-solid fa-bolt"></i> Attēlu optimizēšana</h2>
-            <p style="color:var(--text-muted); margin-bottom:20px">Samazina attēlu izmērus, pārvēršot uz WebP formātu. Attēli, kas jau ir mazāki par 1920px platumu, tiks pārvērsti tikai uz WebP bez mērogošanas.</p>
+            <p style="color:var(--text-muted); margin-bottom:20px">Samazina attēlu izmērus un pārvērš uz WebP formātu.</p>
             <?php if (!extension_loaded('gd')): ?>
                 <div style="padding:16px; background:#fff3cd; border-radius:var(--radius); color:#856404; margin-bottom:20px">
                     <i class="fa-solid fa-triangle-exclamation"></i> PHP GD nav pieejams. Optimizēšana nav iespējama.
@@ -92,7 +148,6 @@ function formatSize($bytes) {
 
             <?php if (!empty($debug)): ?>
                 <div style="margin-bottom:20px; padding:12px; background:#eee; border-radius:var(--radius); font-family:monospace; font-size:12px; white-space:pre-wrap">
-                    <strong>Debug log:</strong><br>
                     <?= implode("\n", $debug) ?>
                 </div>
             <?php endif; ?>
@@ -131,11 +186,6 @@ function formatSize($bytes) {
                         <?php endforeach; ?>
                     </tbody>
                 </table>
-            <?php elseif (isset($_POST['optimize_all'])): ?>
-                <div style="padding:24px; text-align:center; color:var(--text-muted)">
-                    <i class="fa-solid fa-circle-exclamation" style="font-size:32px; margin-bottom:12px; display:block"></i>
-                    Nevēlamie faili netika atrasti vai optimizēšana neveica.
-                </div>
             <?php endif; ?>
         </div>
     </main>
