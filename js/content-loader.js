@@ -57,13 +57,6 @@
     return fetchJson(api + '/blogs?' + q + '&select=id,title,description,featured_image,published_at&order=' + encodeURIComponent('published_at.desc'));
   }
 
-  function fetchFallbackImages() {
-    return fetch('get-images.php').then(function (r) {
-      if (!r.ok) throw new Error('HTTP ' + r.status);
-      return r.json();
-    }).catch(function () { return []; });
-  }
-
   // Start fetching immediately (each failure returns empty defaults)
   var safe = function (p, def) { return p.catch(function () { return def; }); };
   var dataPromise = Promise.all([
@@ -72,8 +65,7 @@
     safe(fetchItems('testimonials'), []),
     safe(fetchItems('experiences'), []),
     safe(fetchBlogs(), []),
-    safe(fetchGlobalImages(), {}),
-    safe(fetchFallbackImages(), [])
+    safe(fetchGlobalImages(), {})
   ]);
 
   function domReady(fn) {
@@ -87,7 +79,7 @@
     return d.innerHTML;
   }
 
-  function applyBlocks(blocks, fallbackImages) {
+  function applyBlocks(blocks) {
     Object.keys(blocks).forEach(function (key) {
       var val = blocks[key];
       if (val == null || val === '') return;
@@ -170,16 +162,13 @@
     }
 
     // Set hero and missis images from JSON gallery arrays (random pick)
-    function startSlideshow(key, sel1, sel2, fallbackImages) {
+    function startSlideshow(key, sel1, sel2) {
       var paths = [];
       if (blocks[key]) {
         try {
           var parsed = JSON.parse(blocks[key]);
           if (Array.isArray(parsed) && parsed.length) paths = parsed;
         } catch(e) {}
-      }
-      if (!paths.length && fallbackImages && fallbackImages.length) {
-        paths = fallbackImages;
       }
       if (!paths.length) return;
       try {
@@ -271,8 +260,8 @@
         if (pending <= 0) onAllPreloaded();
       } catch(e) { console.warn('Slideshow error for ' + key + ':', e); }
     }
-    startSlideshow('hero_images', '.hero-img-1', '.hero-img-2', fallbackImages);
-    startSlideshow('missis_images', '.missis-img-1', '.missis-img-2', fallbackImages);
+        startSlideshow('hero_images', '.hero-img-1', '.hero-img-2');
+        startSlideshow('missis_images', '.missis-img-1', '.missis-img-2');
   }
 
   function renderServices(items) {
@@ -447,7 +436,6 @@
     var experiences = results[3];
     var blogs = results[4];
     var globalImages = results[5];
-    var fallbackImages = results[6];
 
     // Merge global images into blocks so they're available for the slideshow
     if (globalImages) {
@@ -456,7 +444,7 @@
 
     domReady(function () {
       window.cmsBlocks = blocks;
-      if (blocks && Object.keys(blocks).length) applyBlocks(blocks, fallbackImages);
+      if (blocks && Object.keys(blocks).length) applyBlocks(blocks);
       if (services && services.length) { renderServices(services); observeReveals(); }
       if (testimonials && testimonials.length) { renderTestimonials(testimonials); observeReveals(); }
       if (experiences && experiences.length) { renderExperiences(experiences); observeReveals(); }
