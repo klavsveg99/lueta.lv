@@ -29,14 +29,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'reset
             if (isset($res['error'])) error_log('Reset: ' . $table . ' delete error for ' . $page . ': ' . $res['error']);
         }
     }
-    // Delete uploaded images
-    $uploadDir = __DIR__ . '/../media';
-    if (is_dir($uploadDir)) {
-        $files = glob($uploadDir . '/hero-*.*');
-        foreach ($files as $file) unlink($file);
-        $files = glob($uploadDir . '/missis-*.*');
-        foreach ($files as $file) unlink($file);
-    }
     // Re-insert default content for services, testimonials, experiences (LV + EN)
     $defaultServices = array(
         array('page' => 'index', 'title' => 'Zīmola mārketings', 'description' => 'Veidoju zīmola identitāti, pozicionēšanu un balsi, kas emocionāli saista ar jūsu auditoriju un atšķir tirgū.', 'display_order' => 0),

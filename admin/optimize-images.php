@@ -3,16 +3,11 @@ require_once __DIR__ . '/inc/auth.php';
 require_once __DIR__ . '/inc/functions.php';
 
 set_time_limit(300);
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
-
 $mediaDir = __DIR__ . '/../media';
 $results = array();
 $optimized = 0;
 $skipped = 0;
 $failed = 0;
-$debug = array();
 
 function formatSize($bytes) {
     if ($bytes >= 1048576) return round($bytes / 1048576, 2) . ' MB';
@@ -30,7 +25,7 @@ function getAllImages($dir) {
         $path = $dir . '/' . $entry;
         if (is_dir($path)) continue;
         $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
-        if (in_array($ext, array('jpg', 'jpeg', 'png', 'webp', 'gif'))) {
+        if (in_array($ext, array('jpg', 'jpeg', 'png', 'webp', 'gif')) && filesize($path) > 0) {
             $images[] = $path;
         }
     }
@@ -41,96 +36,7 @@ function getAllImages($dir) {
 
 $allFiles = getAllImages($mediaDir);
 
-$downloadResults = array();
-if (isset($_POST['download_missing'])) {
-    $supabase = getSupabase();
-    $allDbPaths = array();
-    foreach (array('hero_images', 'missis_images') as $bk) {
-        $rows = $supabase->select('content_blocks', array('page' => 'eq.index', 'block_key' => 'eq.' . $bk, 'select' => 'block_value'));
-        if ($rows && !isset($rows['error']) && count($rows) > 0) {
-            $decoded = json_decode($rows[0]['block_value'], true);
-            if (is_array($decoded)) $allDbPaths = array_merge($allDbPaths, $decoded);
-        }
-    }
-
-    $deleted = 0;
-    foreach ($allDbPaths as $p) {
-        $fp = $mediaDir . '/' . basename($p);
-        if (file_exists($fp) && filesize($fp) === 0) {
-            unlink($fp);
-            $deleted++;
-        }
-    }
-    if ($deleted > 0) $downloadResults[] = array('path' => "Iztīrīti $deleted tukši faili", 'status' => 'ok', 'size' => 0);
-
-    $siteUrl = rtrim($_SERVER['HTTPS'] === 'on' ? 'https' : 'http', 's') . '://' . $_SERVER['HTTP_HOST'];
-
-    foreach ($allDbPaths as $p) {
-        $fullPath = $mediaDir . '/' . basename($p);
-        if (file_exists($fullPath) && filesize($fullPath) > 100) {
-            $downloadResults[] = array('path' => $p, 'status' => 'exists', 'size' => filesize($fullPath));
-            continue;
-        }
-        $url = $siteUrl . '/' . $p;
-        $data = false;
-        $httpCode = 0;
-        $curlError = '';
-        if (function_exists('curl_init')) {
-            $ch = curl_init($url);
-            curl_setopt_array($ch, array(
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_FOLLOWLOCATION => true,
-                CURLOPT_TIMEOUT => 60,
-                CURLOPT_SSL_VERIFYPEER => false,
-                CURLOPT_CONNECTTIMEOUT => 10,
-            ));
-            $data = curl_exec($ch);
-            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            $curlError = curl_error($ch);
-            $size = curl_getinfo($ch, CURLINFO_SIZE_DOWNLOAD);
-            curl_close($ch);
-            if ($httpCode < 200 || $httpCode >= 300 || $size < 100) $data = false;
-        } else {
-            $data = @file_get_contents($url);
-        }
-        if ($data !== false && strlen($data) > 100) {
-            file_put_contents($fullPath, $data);
-            $downloadResults[] = array('path' => $p, 'status' => 'ok', 'size' => strlen($data));
-        } else {
-            $detail = $curlError ? "cURL: $curlError" : "HTTP $httpCode";
-            $downloadResults[] = array('path' => $p, 'status' => 'fail', 'size' => 0, 'detail' => $detail);
-        }
-    }
-    $allFiles = getAllImages($mediaDir);
-}
-
 if (isset($_POST['optimize_all'])) {
-    $debug[] = "Starting optimization...";
-    $debug[] = "Media directory: $mediaDir";
-    $debug[] = "Directory exists: " . (is_dir($mediaDir) ? 'Yes' : 'NO');
-    $debug[] = "GD available: " . (extension_loaded('gd') ? 'Yes' : 'No');
-    $debug[] = "Files found by getAllImages: " . count($allFiles);
-
-    $allEntries = @scandir($mediaDir);
-    if ($allEntries) {
-        $debug[] = "scandir total entries: " . count($allEntries);
-        $heroFiles = array_filter($allEntries, function($e) { return strpos($e, 'hero-') === 0; });
-        $missisFiles = array_filter($allEntries, function($e) { return strpos($e, 'missis-') === 0; });
-        $blogFiles = array_filter($allEntries, function($e) { return strpos($e, 'blog-') === 0; });
-        $debug[] = "hero-* files in dir: " . count($heroFiles);
-        $debug[] = "missis-* files in dir: " . count($missisFiles);
-        $debug[] = "blog-* files in dir: " . count($blogFiles);
-        if (!empty($heroFiles)) {
-            $sample = array_slice(array_values($heroFiles), 0, 3);
-            foreach ($sample as $s) {
-                $full = $mediaDir . '/' . $s;
-                $debug[] = "  $s -> exists:" . (file_exists($full) ? 'Y' : 'N') . " readable:" . (is_readable($full) ? 'Y' : 'N') . " size:" . filesize($full);
-            }
-        }
-    } else {
-        $debug[] = "scandir FAILED";
-    }
-
     foreach ($allFiles as $file) {
         $before = filesize($file);
         $name = basename($file);
@@ -153,6 +59,23 @@ if (isset($_POST['optimize_all'])) {
             $failed++;
         }
     }
+    $allFiles = getAllImages($mediaDir);
+}
+
+$supabase = getSupabase();
+$dbPaths = array();
+$dbMissing = 0;
+$dbFound = 0;
+foreach (array('hero_images', 'missis_images') as $bk) {
+    $rows = $supabase->select('content_blocks', array('page' => 'eq.index', 'block_key' => 'eq.' . $bk, 'select' => 'block_value'));
+    if ($rows && !isset($rows['error']) && count($rows) > 0) {
+        $decoded = json_decode($rows[0]['block_value'], true);
+        if (is_array($decoded)) $dbPaths = array_merge($dbPaths, $decoded);
+    }
+}
+foreach ($dbPaths as $p) {
+    $fp = $mediaDir . '/' . basename($p);
+    if (file_exists($fp) && filesize($fp) > 100) { $dbFound++; } else { $dbMissing++; }
 }
 ?>
 <!DOCTYPE html>
@@ -173,132 +96,63 @@ if (isset($_POST['optimize_all'])) {
         <a href="index.php" class="btn btn-outline btn-sm"><i class="fa-solid fa-arrow-left"></i> Atpakaļ</a>
     </header>
     <main class="page-content" style="padding:var(--page-padding)">
+        <?php if (!extension_loaded('gd')): ?>
         <div class="card">
-            <h2><i class="fa-solid fa-folder-open"></i> Visi faili mapē /media/</h2>
-            <p style="color:var(--text-muted); margin-bottom:16px">Šie ir visi attēlu faili, kas atrodami serverī. Ja šeit nav `hero-` vai `missis-` failu, tie nav serverī (iespējams, dzēsti pie "Reset All").</p>
-            <?php if (empty($allFiles)): ?>
-                <p style="color:#dc3545">Nav atrasts neviens attēls mapē /media/.</p>
-            <?php else: ?>
-                <table style="width:100%; border-collapse:collapse; margin-bottom:24px">
-                    <thead>
-                        <tr>
-                            <th style="text-align:left; padding:8px; border-bottom:2px solid var(--border)">Faila nosaukums</th>
-                            <th style="text-align:right; padding:8px; border-bottom:2px solid var(--border)">Lielums</th>
-                            <th style="text-align:left; padding:8px; border-bottom:2px solid var(--border)">Tips</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php
-                        $totalSize = 0;
-                        foreach ($allFiles as $f):
-                            $size = @filesize($f) ?: 0;
-                            $totalSize += $size;
-                            $name = basename($f);
-                            $ext = strtoupper(pathinfo($f, PATHINFO_EXTENSION));
-                            $prefix = '';
-                            if (strpos($name, 'hero-') === 0) $prefix = '<span style="color:#007bff">HERO</span> ';
-                            elseif (strpos($name, 'missis-') === 0) $prefix = '<span style="color:#e83e8c">MISSIS</span> ';
-                            elseif (strpos($name, 'blog-feat-') === 0) $prefix = '<span style="color:#28a745">BLOG FEAT</span> ';
-                            elseif (strpos($name, 'blog-img-') === 0) $prefix = '<span style="color:#17a2b8">BLOG IMG</span> ';
-                            elseif (strpos($name, 'lueta-') === 0) $prefix = '<span style="color:var(--text-muted)">FALLBACK</span> ';
-                        ?>
-                        <tr>
-                            <td style="padding:6px 8px; border-bottom:1px solid var(--border); font-size:13px; font-family:monospace"><?= $prefix . htmlspecialchars($name) ?></td>
-                            <td style="padding:6px 8px; border-bottom:1px solid var(--border); text-align:right; font-size:13px"><?= formatSize($size) ?></td>
-                            <td style="padding:6px 8px; border-bottom:1px solid var(--border); font-size:13px"><?= $ext ?></td>
-                        </tr>
-                        <?php endforeach; ?>
-                        <tr>
-                            <td style="padding:8px; border-top:2px solid var(--border); font-weight:600">Kopā: <?= count($allFiles) ?> faili</td>
-                            <td style="padding:8px; border-top:2px solid var(--border); text-align:right; font-weight:600"><?= formatSize($totalSize) ?></td>
-                            <td></td>
-                        </tr>
-                    </tbody>
-                </table>
-            <?php endif; ?>
+            <div style="padding:16px; background:#fff3cd; border-radius:var(--radius); color:#856404">
+                <i class="fa-solid fa-triangle-exclamation"></i> PHP GD nav pieejams. Optimizēšana nav iespējama.
+            </div>
+        </div>
+        <?php endif; ?>
+
+        <div class="card">
+            <h2><i class="fa-solid fa-folder-open"></i> Faili /media/ mapē (<?= count($allFiles) ?>)</h2>
+            <table style="width:100%; border-collapse:collapse; margin-top:12px">
+                <thead>
+                    <tr>
+                        <th style="text-align:left; padding:8px; border-bottom:2px solid var(--border)">Faila nosaukums</th>
+                        <th style="text-align:right; padding:8px; border-bottom:2px solid var(--border)">Lielums</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php $totalSize = 0; foreach ($allFiles as $f): $size = filesize($f); $totalSize += $size; $name = basename($f); ?>
+                    <tr>
+                        <td style="padding:6px 8px; border-bottom:1px solid var(--border); font-size:13px; font-family:monospace"><?= htmlspecialchars($name) ?></td>
+                        <td style="padding:6px 8px; border-bottom:1px solid var(--border); text-align:right; font-size:13px"><?= formatSize($size) ?></td>
+                    </tr>
+                    <?php endforeach; ?>
+                    <tr>
+                        <td style="padding:8px; border-top:2px solid var(--border); font-weight:600">Kopā: <?= count($allFiles) ?> faili</td>
+                        <td style="padding:8px; border-top:2px solid var(--border); text-align:right; font-weight:600"><?= formatSize($totalSize) ?></td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
 
-        <?php
-        $supabase = getSupabase();
-        $dbPaths = array();
-        $dbMissing = 0;
-        $dbFound = 0;
-        foreach (array('hero_images', 'missis_images') as $bk) {
-            $rows = $supabase->select('content_blocks', array('page' => 'eq.index', 'block_key' => 'eq.' . $bk, 'select' => 'block_value'));
-            if ($rows && !isset($rows['error']) && count($rows) > 0) {
-                $decoded = json_decode($rows[0]['block_value'], true);
-                if (is_array($decoded)) $dbPaths = array_merge($dbPaths, $decoded);
-            }
-        }
-        ?>
+        <?php if (!empty($dbPaths)): ?>
         <div class="card" style="margin-top:24px">
-            <h2><i class="fa-solid fa-database"></i> DB attēlu ceļi vs failsistēma</h2>
-            <p style="color:var(--text-muted); margin-bottom:16px">Attēli, kas reģistrēti Supabase datubāzē, un vai tie eksistē servera /media/ mapē.</p>
-            <?php if (empty($dbPaths)): ?>
-                <p style="color:var(--text-muted)">Nav atrasti nekādi attēlu ceļi datubāzē.</p>
-            <?php else: ?>
-                <table style="width:100%; border-collapse:collapse">
-                    <thead>
-                        <tr>
-                            <th style="text-align:left; padding:8px; border-bottom:2px solid var(--border)">Ceļš (DB)</th>
-                            <th style="text-align:center; padding:8px; border-bottom:2px solid var(--border)">Eksistē?</th>
-                            <th style="text-align:right; padding:8px; border-bottom:2px solid var(--border)">Lielums</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php
-                        $dbMissing = 0;
-                        $dbFound = 0;
-                        foreach ($dbPaths as $p):
-                            $fullPath = __DIR__ . '/../' . $p;
-                            $exists = file_exists($fullPath);
-                            if ($exists) { $dbFound++; } else { $dbMissing++; }
-                        ?>
-                        <tr>
-                            <td style="padding:6px 8px; border-bottom:1px solid var(--border); font-size:13px; font-family:monospace"><?= htmlspecialchars($p) ?></td>
-                            <td style="padding:6px 8px; border-bottom:1px solid var(--border); text-align:center; font-size:13px">
-                                <?php if ($exists): ?>
-                                    <span style="color:#28a745"><i class="fa-solid fa-check"></i></span>
-                                <?php else: ?>
-                                    <span style="color:#dc3545"><i class="fa-solid fa-xmark"></i></span>
-                                <?php endif; ?>
-                            </td>
-                            <td style="padding:6px 8px; border-bottom:1px solid var(--border); text-align:right; font-size:13px"><?= $exists ? formatSize(filesize($fullPath)) : '-' ?></td>
-                        </tr>
-                        <?php endforeach; ?>
-                        <tr>
-                            <td colspan="3" style="padding:8px; border-top:2px solid var(--border); font-size:13px">
-                                <strong>Kopā:</strong> <?= count($dbPaths) ?> ceļi |
-                                <span style="color:#28a745"><?= $dbFound ?> eksistē</span> |
-                                <span style="color:#dc3545"><?= $dbMissing ?> trūkst</span>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            <?php endif; ?>
-        </div>
-
-        <?php if (!empty($downloadResults)): ?>
-        <div class="card" style="margin-top:24px">
-            <h2><i class="fa-solid fa-download"></i> Lejupielādes rezultāti</h2>
+            <h2><i class="fa-solid fa-database"></i> Datubāzes ceļi vs failsistēma</h2>
+            <p style="color:var(--text-muted); margin-bottom:12px; font-size:14px">
+                <span style="color:#28a745"><strong><?= $dbFound ?></strong> eksistē</span> |
+                <span style="color:#dc3545"><strong><?= $dbMissing ?></strong> trūkst</span>
+                — trūkstošie jāpārūpējas caur admin paneli → Attēli.
+            </p>
             <table style="width:100%; border-collapse:collapse">
                 <thead>
                     <tr>
                         <th style="text-align:left; padding:8px; border-bottom:2px solid var(--border)">Ceļš</th>
-                        <th style="text-align:right; padding:8px; border-bottom:2px solid var(--border)">Lielums</th>
                         <th style="text-align:center; padding:8px; border-bottom:2px solid var(--border)">Statuss</th>
+                        <th style="text-align:right; padding:8px; border-bottom:2px solid var(--border)">Lielums</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <?php foreach ($downloadResults as $dr): ?>
+                    <?php foreach ($dbPaths as $p): $fp = $mediaDir . '/' . basename($p); $exists = file_exists($fp) && filesize($fp) > 100; ?>
                     <tr>
-                        <td style="padding:6px 8px; border-bottom:1px solid var(--border); font-size:13px; font-family:monospace"><?= htmlspecialchars($dr['path']) ?></td>
-                        <td style="padding:6px 8px; border-bottom:1px solid var(--border); text-align:right; font-size:13px"><?= $dr['size'] > 0 ? formatSize($dr['size']) : '-' ?></td>
+                        <td style="padding:6px 8px; border-bottom:1px solid var(--border); font-size:13px; font-family:monospace"><?= htmlspecialchars($p) ?></td>
                         <td style="padding:6px 8px; border-bottom:1px solid var(--border); text-align:center; font-size:13px">
-                            <?php if ($dr['status'] === 'ok'): ?><span style="color:#28a745"><i class="fa-solid fa-check"></i> Lejupielādēts</span>
-                            <?php elseif ($dr['status'] === 'exists'): ?><span style="color:var(--text-muted)"><i class="fa-solid fa-minus"></i> Jau eksistē</span>
-                            <?php else: ?><span style="color:#dc3545"><i class="fa-solid fa-xmark"></i> <?= htmlspecialchars($dr['detail'] ?? 'Kļūda') ?></span><?php endif; ?>
+                            <?php if ($exists): ?><span style="color:#28a745"><i class="fa-solid fa-check"></i></span>
+                            <?php else: ?><span style="color:#dc3545"><i class="fa-solid fa-xmark"></i></span><?php endif; ?>
                         </td>
+                        <td style="padding:6px 8px; border-bottom:1px solid var(--border); text-align:right; font-size:13px"><?= $exists ? formatSize(filesize($fp)) : '-' ?></td>
                     </tr>
                     <?php endforeach; ?>
                 </tbody>
@@ -306,72 +160,47 @@ if (isset($_POST['optimize_all'])) {
         </div>
         <?php endif; ?>
 
+        <?php if (extension_loaded('gd')): ?>
         <div class="card" style="margin-top:24px">
-            <h2><i class="fa-solid fa-bolt"></i> Attēlu optimizēšana</h2>
-            <p style="color:var(--text-muted); margin-bottom:20px">Samazina attēlu izmērus un pārvērš uz WebP formātu.</p>
-            <?php if ($dbMissing > 0): ?>
-            <form method="post" style="margin-bottom:16px" onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').innerHTML='<i class=\'fa-solid fa-spinner fa-spin\'></i> Lejupielādē...';">
-                <input type="hidden" name="download_missing" value="1">
-                <button type="submit" class="btn btn-primary" style="margin-bottom:12px">
-                    <i class="fa-solid fa-download"></i> Lejupielādē trūkstošos attēlus no CDN (<?= $dbMissing ?>)
-                </button>
+            <h2><i class="fa-solid fa-bolt"></i> Optimizēt</h2>
+            <p style="color:var(--text-muted); margin-bottom:20px">Pārvērš uz WebP un samazina izmērus. Attēli ≤1920px platumā un ≤500KB netiek mainīti.</p>
+            <form method="post" style="margin-bottom:20px" onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').innerHTML='<i class=\'fa-solid fa-spinner fa-spin\'></i> Optimizē...';">
+                <input type="hidden" name="optimize_all" value="1">
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-bolt"></i> Optimizēt visus (<?= count($allFiles) ?>)</button>
             </form>
-            <?php endif; ?>
-            <?php if (!extension_loaded('gd')): ?>
-                <div style="padding:16px; background:#fff3cd; border-radius:var(--radius); color:#856404; margin-bottom:20px">
-                    <i class="fa-solid fa-triangle-exclamation"></i> PHP GD nav pieejams. Optimizēšana nav iespējama.
-                </div>
-            <?php else: ?>
-                <form method="post" style="margin-bottom:24px" onsubmit="document.getElementById('optimizeBtn').disabled=true; document.getElementById('optimizeBtn').innerHTML='<i class=\'fa-solid fa-spinner fa-spin\'></i> Optimizē...';">
-                    <input type="hidden" name="optimize_all" value="1">
-                    <button type="submit" id="optimizeBtn" class="btn btn-primary">
-                        <i class="fa-solid fa-bolt"></i> Optimizēt visus attēlus
-                    </button>
-                </form>
-            <?php endif; ?>
-
-            <?php if (!empty($debug)): ?>
-                <div style="margin-bottom:20px; padding:12px; background:#1a1a1a; border-radius:var(--radius); font-family:monospace; font-size:12px; white-space:pre-wrap; color:#0f0; line-height:1.6">
-                    <?= htmlspecialchars(implode("\n", $debug)) ?>
-                </div>
-            <?php endif; ?>
-
             <?php if (!empty($results)): ?>
-                <div style="margin-bottom:16px; padding:12px; background:var(--bg2); border-radius:var(--radius); display:flex; gap:24px">
-                    <span><strong><?= $optimized ?></strong> optimizēti</span>
-                    <span><strong><?= $skipped ?></strong> nav nepieciešami</span>
-                    <span><strong><?= $failed ?></strong> kļūdas</span>
-                </div>
-                <table style="width:100%; border-collapse:collapse">
-                    <thead>
-                        <tr>
-                            <th style="text-align:left; padding:8px; border-bottom:1px solid var(--border)">Faila nosaukums</th>
-                            <th style="text-align:right; padding:8px; border-bottom:1px solid var(--border)">Pirms</th>
-                            <th style="text-align:right; padding:8px; border-bottom:1px solid var(--border)">Pēc</th>
-                            <th style="text-align:right; padding:8px; border-bottom:1px solid var(--border)">Statuss</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($results as $r): ?>
-                            <tr>
-                                <td style="padding:8px; border-bottom:1px solid var(--border); font-size:14px"><?= htmlspecialchars($r['name']) ?></td>
-                                <td style="padding:8px; border-bottom:1px solid var(--border); text-align:right; font-size:14px"><?= formatSize($r['before']) ?></td>
-                                <td style="padding:8px; border-bottom:1px solid var(--border); text-align:right; font-size:14px"><?= formatSize($r['after']) ?></td>
-                                <td style="padding:8px; border-bottom:1px solid var(--border); text-align:right; font-size:14px">
-                                    <?php if ($r['status'] === 'ok'): ?>
-                                        <span style="color:#28a745"><i class="fa-solid fa-check"></i> <?= round((1 - $r['after'] / $r['before']) * 100) ?>% smaller</span>
-                                    <?php elseif ($r['status'] === 'skip'): ?>
-                                        <span style="color:var(--text-muted)"><i class="fa-solid fa-minus"></i> Nav nepieciešams</span>
-                                    <?php else: ?>
-                                        <span style="color:#dc3545"><i class="fa-solid fa-xmark"></i> Kļūda</span>
-                                    <?php endif; ?>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
+            <div style="margin-bottom:12px; padding:10px; background:var(--bg2); border-radius:var(--radius); display:flex; gap:20px; font-size:14px">
+                <span><strong><?= $optimized ?></strong> optimizēti</span>
+                <span><strong><?= $skipped ?></strong> nav nepieciešami</span>
+                <span><strong><?= $failed ?></strong> kļūdas</span>
+            </div>
+            <table style="width:100%; border-collapse:collapse">
+                <thead>
+                    <tr>
+                        <th style="text-align:left; padding:8px; border-bottom:1px solid var(--border)">Fails</th>
+                        <th style="text-align:right; padding:8px; border-bottom:1px solid var(--border)">Pirms</th>
+                        <th style="text-align:right; padding:8px; border-bottom:1px solid var(--border)">Pēc</th>
+                        <th style="text-align:right; padding:8px; border-bottom:1px solid var(--border)">Statuss</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($results as $r): ?>
+                    <tr>
+                        <td style="padding:6px 8px; border-bottom:1px solid var(--border); font-size:13px"><?= htmlspecialchars($r['name']) ?></td>
+                        <td style="padding:6px 8px; border-bottom:1px solid var(--border); text-align:right; font-size:13px"><?= formatSize($r['before']) ?></td>
+                        <td style="padding:6px 8px; border-bottom:1px solid var(--border); text-align:right; font-size:13px"><?= formatSize($r['after']) ?></td>
+                        <td style="padding:6px 8px; border-bottom:1px solid var(--border); text-align:right; font-size:13px">
+                            <?php if ($r['status'] === 'ok'): ?><span style="color:#28a745">-<?= round((1 - $r['after'] / $r['before']) * 100) ?>%</span>
+                            <?php elseif ($r['status'] === 'skip'): ?><span style="color:var(--text-muted)">—</span>
+                            <?php else: ?><span style="color:#dc3545">kļūda</span><?php endif; ?>
+                        </td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
             <?php endif; ?>
         </div>
+        <?php endif; ?>
     </main>
 </body>
 </html>
