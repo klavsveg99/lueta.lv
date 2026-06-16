@@ -196,7 +196,7 @@ function optimizeImage($path, $maxWidth = 1920, $quality = 82, $maxSizeKB = 500)
     $height = $info[1];
     $fileSizeKB = filesize($path) / 1024;
 
-    if ($width <= $maxWidth && $fileSizeKB <= $maxSizeKB) return false;
+    if ($width <= $maxWidth && $fileSizeKB <= $maxSizeKB) return 'skip';
 
     if ($width > $maxWidth) {
         $newWidth = $maxWidth;

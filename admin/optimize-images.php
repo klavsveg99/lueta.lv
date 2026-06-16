@@ -73,7 +73,10 @@ if (isset($_POST['optimize_all'])) {
         $name = basename($file);
         $result = optimizeImage($file);
         $after = filesize($file);
-        if ($result) {
+        if ($result === 'skip') {
+            $results[] = array('name' => $name, 'before' => $before, 'after' => $before, 'status' => 'skip');
+            $skipped++;
+        } elseif ($result) {
             if ($after < $before) {
                 $results[] = array('name' => $name, 'before' => $before, 'after' => $after, 'status' => 'ok');
                 $optimized++;
