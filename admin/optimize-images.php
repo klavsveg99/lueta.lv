@@ -61,23 +61,35 @@ if (isset($_POST['download_missing'])) {
             $deleted++;
         }
     }
-    if ($deleted > 0) $downloadResults[] = array('path' => "Cleaned $deleted empty files", 'status' => 'ok', 'size' => 0);
+    if ($deleted > 0) $downloadResults[] = array('path' => "Iztīrīti $deleted tukši faili", 'status' => 'ok', 'size' => 0);
+
+    $siteUrl = rtrim($_SERVER['HTTPS'] === 'on' ? 'https' : 'http', 's') . '://' . $_SERVER['HTTP_HOST'];
 
     foreach ($allDbPaths as $p) {
         $fullPath = $mediaDir . '/' . basename($p);
-        if (file_exists($fullPath) && filesize($fullPath) > 0) {
+        if (file_exists($fullPath) && filesize($fullPath) > 100) {
             $downloadResults[] = array('path' => $p, 'status' => 'exists', 'size' => filesize($fullPath));
             continue;
         }
-        $url = 'https://lueta.lv/' . $p;
+        $url = $siteUrl . '/' . $p;
         $data = false;
+        $httpCode = 0;
+        $curlError = '';
         if (function_exists('curl_init')) {
             $ch = curl_init($url);
-            curl_setopt_array($ch, array(CURLOPT_RETURNTRANSFER => true, CURLOPT_FOLLOWLOCATION => true, CURLOPT_TIMEOUT => 30, CURLOPT_SSL_VERIFYPEER => false));
+            curl_setopt_array($ch, array(
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_TIMEOUT => 60,
+                CURLOPT_SSL_VERIFYPEER => false,
+                CURLOPT_CONNECTTIMEOUT => 10,
+            ));
             $data = curl_exec($ch);
-            $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $curlError = curl_error($ch);
+            $size = curl_getinfo($ch, CURLINFO_SIZE_DOWNLOAD);
             curl_close($ch);
-            if ($code < 200 || $code >= 300) $data = false;
+            if ($httpCode < 200 || $httpCode >= 300 || $size < 100) $data = false;
         } else {
             $data = @file_get_contents($url);
         }
@@ -85,7 +97,8 @@ if (isset($_POST['download_missing'])) {
             file_put_contents($fullPath, $data);
             $downloadResults[] = array('path' => $p, 'status' => 'ok', 'size' => strlen($data));
         } else {
-            $downloadResults[] = array('path' => $p, 'status' => 'fail', 'size' => 0);
+            $detail = $curlError ? "cURL: $curlError" : "HTTP $httpCode";
+            $downloadResults[] = array('path' => $p, 'status' => 'fail', 'size' => 0, 'detail' => $detail);
         }
     }
     $allFiles = getAllImages($mediaDir);
@@ -284,7 +297,7 @@ if (isset($_POST['optimize_all'])) {
                         <td style="padding:6px 8px; border-bottom:1px solid var(--border); text-align:center; font-size:13px">
                             <?php if ($dr['status'] === 'ok'): ?><span style="color:#28a745"><i class="fa-solid fa-check"></i> Lejupielādēts</span>
                             <?php elseif ($dr['status'] === 'exists'): ?><span style="color:var(--text-muted)"><i class="fa-solid fa-minus"></i> Jau eksistē</span>
-                            <?php else: ?><span style="color:#dc3545"><i class="fa-solid fa-xmark"></i> Kļūda</span><?php endif; ?>
+                            <?php else: ?><span style="color:#dc3545"><i class="fa-solid fa-xmark"></i> <?= htmlspecialchars($dr['detail'] ?? 'Kļūda') ?></span><?php endif; ?>
                         </td>
                     </tr>
                     <?php endforeach; ?>
