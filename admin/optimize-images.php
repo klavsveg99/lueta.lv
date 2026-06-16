@@ -2,30 +2,50 @@
 require_once __DIR__ . '/inc/auth.php';
 require_once __DIR__ . '/inc/functions.php';
 
+set_time_limit(300); // Increase timeout to 5 minutes
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 $mediaDir = __DIR__ . '/../media';
 $results = array();
 $optimized = 0;
 $skipped = 0;
 $failed = 0;
+$debug = array();
 
-if (isset($_POST['optimize_all']) && is_dir($mediaDir)) {
-    $files = glob($mediaDir . '/{*.jpg,*.jpeg,*.png,*.webp}', GLOB_BRACE);
-    foreach ($files as $file) {
-        $before = filesize($file);
-        $name = basename($file);
-        $result = optimizeImage($file);
-        $after = filesize($file);
-        if ($result) {
-            if ($after < $before) {
-                $results[] = array('name' => $name, 'before' => $before, 'after' => $after, 'status' => 'ok');
-                $optimized++;
+if (isset($_POST['optimize_all'])) {
+    $debug[] = "Starting optimization...";
+    if (!is_dir($mediaDir)) {
+        $debug[] = "Error: media directory not found at $mediaDir";
+    } else {
+        $debug[] = "Media directory found. Searching for images...";
+        $files = array();
+        $extensions = array('jpg', 'jpeg', 'png', 'webp');
+        foreach ($extensions as $ext) {
+            $files = array_merge($files, glob($mediaDir . '/*.' . $ext));
+            $files = array_merge($files, glob($mediaDir . '/*.' . strtolower($ext)));
+        }
+        
+        $debug[] = "Found " . count($files) . " images.";
+
+        foreach ($files as $file) {
+            $before = filesize($file);
+            $name = basename($file);
+            $result = optimizeImage($file);
+            $after = filesize($file);
+            if ($result) {
+                if ($after < $before) {
+                    $results[] = array('name' => $name, 'before' => $before, 'after' => $after, 'status' => 'ok');
+                    $optimized++;
+                } else {
+                    $results[] = array('name' => $name, 'before' => $before, 'after' => $after, 'status' => 'skip');
+                    $skipped++;
+                }
             } else {
-                $results[] = array('name' => $name, 'before' => $before, 'after' => $after, 'status' => 'skip');
-                $skipped++;
+                $results[] = array('name' => $name, 'before' => $before, 'after' => $before, 'status' => 'fail');
+                $failed++;
             }
-        } else {
-            $results[] = array('name' => $name, 'before' => $before, 'after' => $before, 'status' => 'fail');
-            $failed++;
         }
     }
 }
@@ -69,6 +89,13 @@ function formatSize($bytes) {
                 </form>
             <?php endif; ?>
 
+            <?php if (!empty($debug)): ?>
+                <div style="margin-bottom:20px; padding:12px; background:#eee; border-radius:var(--radius); font-family:monospace; font-size:12px; white-space:pre-wrap">
+                    <strong>Debug log:</strong><br>
+                    <?= implode("\n", $debug) ?>
+                </div>
+            <?php endif; ?>
+
             <?php if (!empty($results)): ?>
                 <div style="margin-bottom:16px; padding:12px; background:var(--bg2); border-radius:var(--radius); display:flex; gap:24px">
                     <span><strong><?= $optimized ?></strong> optimizēti</span>
@@ -103,10 +130,10 @@ function formatSize($bytes) {
                         <?php endforeach; ?>
                     </tbody>
                 </table>
-            <?php elseif (!isset($_POST['optimize_all'])): ?>
+            <?php elseif (isset($_POST['optimize_all'])): ?>
                 <div style="padding:24px; text-align:center; color:var(--text-muted)">
-                    <i class="fa-solid fa-images" style="font-size:32px; margin-bottom:12px; display:block"></i>
-                    Nospiediet "Optimizēt visus attēlus", lai sāktu.
+                    <i class="fa-solid fa-circle-exclamation" style="font-size:32px; margin-bottom:12px; display:block"></i>
+                    Nevēlamie faili netika atrasti vai optimizēšana neveica.
                 </div>
             <?php endif; ?>
         </div>
