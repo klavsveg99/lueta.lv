@@ -53,6 +53,8 @@ try {
                     $filename = 'blog-feat-' . time() . '-' . substr(md5(mt_rand()), 0, 8) . '.' . $ext;
                     $dest = __DIR__ . '/../media/' . $filename;
                     if (move_uploaded_file($_FILES['image']['tmp_name'], $dest)) {
+                        $optimized = optimizeImage($dest);
+                        if ($optimized && $optimized !== $dest) { $filename = basename($optimized); }
                         echo json_encode(array('location' => 'media/' . $filename));
                         exit;
                     }
@@ -69,6 +71,8 @@ try {
                     $filename = 'blog-img-' . time() . '-' . substr(md5(mt_rand()), 0, 8) . '.' . $ext;
                     $dest = __DIR__ . '/../media/' . $filename;
                     if (move_uploaded_file($_FILES['file']['tmp_name'], $dest)) {
+                        $optimized = optimizeImage($dest);
+                        if ($optimized && $optimized !== $dest) { $filename = basename($optimized); }
                         echo json_encode(array('url' => '/media/' . $filename));
                         exit;
                     }
@@ -217,6 +221,7 @@ $page_title = ($lang === 'en') ? 'Jaunumi (EN)' : 'Jaunumi (LV)';
 </div>
 
 <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.2/dist/browser-image-compression.js"></script>
 <script>
 var quill = null;
 try {
@@ -240,13 +245,19 @@ try {
         input.onchange = function() {
             var file = input.files[0];
             if (!file) return;
-            var fd = new FormData();
-            fd.append('action', 'upload_image');
-            fd.append('file', file);
-            fetch('blogs.php', { method: 'POST', body: fd })
-                .then(function(r) { return r.json(); })
-                .then(function(d) { if (d.url) { var range = quill.getSelection(true); quill.insertEmbed(range.index, 'image', d.url); } })
-                .catch(function() { alert('Kļūda augšupielādējot attēlu'); });
+            var doUpload = function(f) {
+                var fd = new FormData();
+                fd.append('action', 'upload_image');
+                fd.append('file', f);
+                fetch('blogs.php', { method: 'POST', body: fd })
+                    .then(function(r) { return r.json(); })
+                    .then(function(d) { if (d.url) { var range = quill.getSelection(true); quill.insertEmbed(range.index, 'image', d.url); } })
+                    .catch(function() { alert('Kļūda augšupielādējot attēlu'); });
+            };
+            if (typeof imageCompression !== 'undefined' && file.size > 80000) {
+                imageCompression({ file: file, maxSizeMB: 0.3, maxWidthOrHeight: 1920, useWebWorker: true })
+                    .then(doUpload).catch(function() { doUpload(file); });
+            } else { doUpload(file); }
         };
     });
 } catch(e) { console.warn('[Blogs] Quill init failed, using textarea fallback'); }
@@ -306,13 +317,20 @@ function closeBlogModal() {
         featBtn.addEventListener('click', function() { featFile.click(); });
         featFile.addEventListener('change', function() {
             if (!this.files.length) return;
-            var fd = new FormData();
-            fd.append('action', 'upload_featured');
-            fd.append('image', this.files[0]);
-            fetch('blogs.php', { method: 'POST', body: fd })
-                .then(function(r) { return r.json(); })
-                .then(function(d) { if (d.location) document.getElementById('featuredImage').value = d.location; })
-                .catch(function() { alert('Kļūda augšupielādējot attēlu'); });
+            var file = this.files[0];
+            var doUpload = function(f) {
+                var fd = new FormData();
+                fd.append('action', 'upload_featured');
+                fd.append('image', f);
+                fetch('blogs.php', { method: 'POST', body: fd })
+                    .then(function(r) { return r.json(); })
+                    .then(function(d) { if (d.location) document.getElementById('featuredImage').value = d.location; })
+                    .catch(function() { alert('Kļūda augšupielādējot attēlu'); });
+            };
+            if (typeof imageCompression !== 'undefined' && file.size > 80000) {
+                imageCompression({ file: file, maxSizeMB: 0.3, maxWidthOrHeight: 1920, useWebWorker: true })
+                    .then(doUpload).catch(function() { doUpload(file); });
+            } else { doUpload(file); }
         });
     }
 

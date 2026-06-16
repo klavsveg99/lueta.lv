@@ -159,6 +159,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'uploa
                 $filename = $section . '-' . time() . '-' . substr(md5(mt_rand()), 0, 8) . '.' . $ext;
                 $dest = $uploadDir . '/' . $filename;
                 if (move_uploaded_file($file['tmp_name'], $dest)) {
+                    $optimized = optimizeImage($dest);
+                    if ($optimized && $optimized !== $dest) {
+                        $filename = basename($optimized);
+                    }
                     $paths[] = 'media/' . $filename;
                 }
             }
@@ -273,6 +277,7 @@ $page_title = 'Satura redaktors';
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
     <link rel="stylesheet" href="css/admin.css?v=<?= filemtime(__DIR__ . '/css/admin.css') ?>">
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.2/dist/browser-image-compression.js"></script>
 </head>
 <body>
 <div class="admin-layout">
@@ -496,6 +501,15 @@ function deleteImage(section, idx) {
     fetch('content.php', { method: 'POST', body: form })
         .then(function() { location.reload(); });
 }
+function compressImage(file, maxPx, qual) {
+    return new Promise(function(resolve) {
+        if (file.type === 'image/gif' || file.size < 80000) { resolve(file); return; }
+        if (typeof imageCompression === 'undefined') { resolve(file); return; }
+        imageCompression({ file: file, maxSizeMB: 0.3, maxWidthOrHeight: maxPx || 1920, useWebWorker: true })
+            .then(function(c) { resolve(c); })
+            .catch(function() { resolve(file); });
+    });
+}
 document.querySelectorAll('[id$="UploadBtn"]').forEach(function(btn) {
     btn.addEventListener('click', function() {
         var section = this.id === 'heroUploadBtn' ? 'hero' : 'missis';
@@ -505,11 +519,17 @@ document.querySelectorAll('[id$="UploadBtn"]').forEach(function(btn) {
         fd.append('action', 'upload_image');
         fd.append('section', section);
         fd.append('lang', '<?= $lang ?>');
-        for (var i = 0; i < fileInput.files.length; i++) {
-            fd.append('image[]', fileInput.files[i]);
+        var files = fileInput.files;
+        var chain = Promise.resolve();
+        var compressed = [];
+        for (var i = 0; i < files.length; i++) {
+            (function(f) { chain = chain.then(function() { return compressImage(f, 1920, 0.82).then(function(c) { compressed.push(c); }); }); })(files[i]);
         }
-        fetch('content.php', { method: 'POST', body: fd })
-            .then(function() { location.reload(); });
+        chain.then(function() {
+            compressed.forEach(function(f) { fd.append('image[]', f); });
+            fetch('content.php', { method: 'POST', body: fd })
+                .then(function() { location.reload(); });
+        });
     });
 });
 

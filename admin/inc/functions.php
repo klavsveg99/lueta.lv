@@ -182,3 +182,62 @@ function saveContentBlock($supabase, $page, $section, $key, $value)
         return $result !== null && !isset($result['error']);
     }
 }
+
+function optimizeImage($path, $maxWidth = 1920, $quality = 82)
+{
+    if (!extension_loaded('gd') || !function_exists('imagecreatefromstring')) return false;
+    if (!is_file($path)) return false;
+
+    $info = @getimagesize($path);
+    if (!$info) return false;
+
+    $mime = $info['mime'];
+    $width = $info[0];
+    $height = $info[1];
+
+    if ($width <= $maxWidth) return false;
+
+    $newWidth = $maxWidth;
+    $newHeight = (int) round($height * ($maxWidth / $width));
+
+    $src = null;
+    switch ($mime) {
+        case 'image/jpeg': $src = imagecreatefromjpeg($path); break;
+        case 'image/png':  $src = imagecreatefrompng($path); break;
+        case 'image/webp': $src = imagecreatefromwebp($path); break;
+        default: return false;
+    }
+    if (!$src) return false;
+
+    $dst = imagecreatetruecolor($newWidth, $newHeight);
+    if ($mime === 'image/png' || $mime === 'image/webp') {
+        imagealphablending($dst, false);
+        imagesavealpha($dst, true);
+        $transparent = imagecolorallocatealpha($dst, 0, 0, 0, 127);
+        imagefilledrectangle($dst, 0, 0, $newWidth, $newHeight, $transparent);
+    }
+    imagecopyresampled($dst, $src, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+
+    $webpPath = preg_replace('/\.(jpe?g|png)$/i', '.webp', $path);
+    $saved = false;
+
+    if (function_exists('imagewebp')) {
+        $saved = imagewebp($dst, $webpPath, $quality);
+        if ($saved && $webpPath !== $path) {
+            imagedestroy($src);
+            imagedestroy($dst);
+            unlink($path);
+            return $webpPath;
+        }
+    }
+
+    switch ($mime) {
+        case 'image/jpeg': $saved = imagejpeg($dst, $path, $quality); break;
+        case 'image/png':  $saved = imagepng($dst, $path, round(9 - ($quality / 100) * 9)); break;
+        case 'image/webp': $saved = imagewebp($dst, $path, $quality); break;
+    }
+
+    imagedestroy($src);
+    imagedestroy($dst);
+    return $saved ? $path : false;
+}
