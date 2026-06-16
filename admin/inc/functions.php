@@ -183,7 +183,7 @@ function saveContentBlock($supabase, $page, $section, $key, $value)
     }
 }
 
-function optimizeImage($path, $maxWidth = 1920, $quality = 82)
+function optimizeImage($path, $maxWidth = 1920, $quality = 82, $maxSizeKB = 500)
 {
     if (!extension_loaded('gd') || !function_exists('imagecreatefromstring')) return false;
     if (!is_file($path)) return false;
@@ -194,11 +194,17 @@ function optimizeImage($path, $maxWidth = 1920, $quality = 82)
     $mime = $info['mime'];
     $width = $info[0];
     $height = $info[1];
+    $fileSizeKB = filesize($path) / 1024;
 
-    if ($width <= $maxWidth) return false;
+    if ($width <= $maxWidth && $fileSizeKB <= $maxSizeKB) return false;
 
-    $newWidth = $maxWidth;
-    $newHeight = (int) round($height * ($maxWidth / $width));
+    if ($width > $maxWidth) {
+        $newWidth = $maxWidth;
+        $newHeight = (int) round($height * ($maxWidth / $width));
+    } else {
+        $newWidth = $width;
+        $newHeight = $height;
+    }
 
     $src = null;
     switch ($mime) {
