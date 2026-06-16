@@ -99,7 +99,8 @@ if (isset($_POST['optimize_all'])) {
         $before = filesize($file);
         $name = basename($file);
         $result = optimizeImage($file);
-        $after = filesize($file);
+        $newFile = is_string($result) ? $result : $file;
+        $after = file_exists($newFile) ? filesize($newFile) : $before;
         if ($result === 'skip') {
             $results[] = array('name' => $name, 'before' => $before, 'after' => $before, 'status' => 'skip');
             $skipped++;
@@ -154,7 +155,7 @@ if (isset($_POST['optimize_all'])) {
                         <?php
                         $totalSize = 0;
                         foreach ($allFiles as $f):
-                            $size = filesize($f);
+                            $size = @filesize($f) ?: 0;
                             $totalSize += $size;
                             $name = basename($f);
                             $ext = strtoupper(pathinfo($f, PATHINFO_EXTENSION));

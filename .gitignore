@@ -4,3 +4,7 @@ private/
 vendor/
 .DS_Store
 Thumbs.db
+media/hero-*
+media/missis-*
+media/blog-feat-*
+media/blog-img-*
