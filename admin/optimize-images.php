@@ -41,6 +41,33 @@ function getAllImages($dir) {
 
 $allFiles = getAllImages($mediaDir);
 
+$downloadResults = array();
+if (isset($_POST['download_missing'])) {
+    $supabase = getSupabase();
+    $allDbPaths = array();
+    foreach (array('hero_images', 'missis_images') as $bk) {
+        $rows = $supabase->select('content_blocks', array('page' => 'eq.index', 'block_key' => 'eq.' . $bk, 'select' => 'block_value'));
+        if ($rows && !isset($rows['error']) && count($rows) > 0) {
+            $decoded = json_decode($rows[0]['block_value'], true);
+            if (is_array($decoded)) $allDbPaths = array_merge($allDbPaths, $decoded);
+        }
+    }
+    foreach ($allDbPaths as $p) {
+        $fullPath = $mediaDir . '/' . basename($p);
+        if (file_exists($fullPath)) {
+            $downloadResults[] = array('path' => $p, 'status' => 'exists', 'size' => filesize($fullPath));
+            continue;
+        }
+        $url = 'https://lueta.lv/' . $p;
+        if (@file_put_contents($fullPath, @file_get_contents($url))) {
+            $downloadResults[] = array('path' => $p, 'status' => 'ok', 'size' => filesize($fullPath));
+        } else {
+            $downloadResults[] = array('path' => $p, 'status' => 'fail', 'size' => 0);
+        }
+    }
+    $allFiles = getAllImages($mediaDir);
+}
+
 if (isset($_POST['optimize_all'])) {
     $debug[] = "Starting optimization...";
     $debug[] = "Media directory: $mediaDir";
@@ -157,6 +184,8 @@ if (isset($_POST['optimize_all'])) {
         <?php
         $supabase = getSupabase();
         $dbPaths = array();
+        $dbMissing = 0;
+        $dbFound = 0;
         foreach (array('hero_images', 'missis_images') as $bk) {
             $rows = $supabase->select('content_blocks', array('page' => 'eq.index', 'block_key' => 'eq.' . $bk, 'select' => 'block_value'));
             if ($rows && !isset($rows['error']) && count($rows) > 0) {
@@ -212,9 +241,45 @@ if (isset($_POST['optimize_all'])) {
             <?php endif; ?>
         </div>
 
+        <?php if (!empty($downloadResults)): ?>
+        <div class="card" style="margin-top:24px">
+            <h2><i class="fa-solid fa-download"></i> Lejupielādes rezultāti</h2>
+            <table style="width:100%; border-collapse:collapse">
+                <thead>
+                    <tr>
+                        <th style="text-align:left; padding:8px; border-bottom:2px solid var(--border)">Ceļš</th>
+                        <th style="text-align:right; padding:8px; border-bottom:2px solid var(--border)">Lielums</th>
+                        <th style="text-align:center; padding:8px; border-bottom:2px solid var(--border)">Statuss</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($downloadResults as $dr): ?>
+                    <tr>
+                        <td style="padding:6px 8px; border-bottom:1px solid var(--border); font-size:13px; font-family:monospace"><?= htmlspecialchars($dr['path']) ?></td>
+                        <td style="padding:6px 8px; border-bottom:1px solid var(--border); text-align:right; font-size:13px"><?= $dr['size'] > 0 ? formatSize($dr['size']) : '-' ?></td>
+                        <td style="padding:6px 8px; border-bottom:1px solid var(--border); text-align:center; font-size:13px">
+                            <?php if ($dr['status'] === 'ok'): ?><span style="color:#28a745"><i class="fa-solid fa-check"></i> Lejupielādēts</span>
+                            <?php elseif ($dr['status'] === 'exists'): ?><span style="color:var(--text-muted)"><i class="fa-solid fa-minus"></i> Jau eksistē</span>
+                            <?php else: ?><span style="color:#dc3545"><i class="fa-solid fa-xmark"></i> Kļūda</span><?php endif; ?>
+                        </td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+        <?php endif; ?>
+
         <div class="card" style="margin-top:24px">
             <h2><i class="fa-solid fa-bolt"></i> Attēlu optimizēšana</h2>
             <p style="color:var(--text-muted); margin-bottom:20px">Samazina attēlu izmērus un pārvērš uz WebP formātu.</p>
+            <?php if ($dbMissing > 0): ?>
+            <form method="post" style="margin-bottom:16px" onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').innerHTML='<i class=\'fa-solid fa-spinner fa-spin\'></i> Lejupielādē...';">
+                <input type="hidden" name="download_missing" value="1">
+                <button type="submit" class="btn btn-primary" style="margin-bottom:12px">
+                    <i class="fa-solid fa-download"></i> Lejupielādē trūkstošos attēlus no CDN (<?= $dbMissing ?>)
+                </button>
+            </form>
+            <?php endif; ?>
             <?php if (!extension_loaded('gd')): ?>
                 <div style="padding:16px; background:#fff3cd; border-radius:var(--radius); color:#856404; margin-bottom:20px">
                     <i class="fa-solid fa-triangle-exclamation"></i> PHP GD nav pieejams. Optimizēšana nav iespējama.
