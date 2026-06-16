@@ -152,7 +152,7 @@ if (isset($_POST['optimize_all'])) {
         </div>
 
         <?php
-        require_once __DIR__ . '/inc/config.php';
+        $supabase = getSupabase();
         $dbPaths = array();
         foreach (array('hero_images', 'missis_images') as $bk) {
             $rows = $supabase->select('content_blocks', array('page' => 'eq.index', 'block_key' => 'eq.' . $bk, 'select' => 'block_value'));
