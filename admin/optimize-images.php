@@ -82,8 +82,9 @@ function formatSize($bytes) {
                     <i class="fa-solid fa-triangle-exclamation"></i> PHP GD nav pieejams. Optimizēšana nav iespējama.
                 </div>
             <?php else: ?>
-                <form method="post" style="margin-bottom:24px">
-                    <button type="submit" name="optimize_all" value="1" class="btn btn-primary" onclick="this.disabled=true; this.innerHTML='<i class=\'fa-solid fa-spinner fa-spin\'></i> Optimizē...'; this.form.submit();">
+                <form method="post" style="margin-bottom:24px" onsubmit="document.getElementById('optimizeBtn').disabled=true; document.getElementById('optimizeBtn').innerHTML='<i class=\'fa-solid fa-spinner fa-spin\'></i> Optimizē...';">
+                    <input type="hidden" name="optimize_all" value="1">
+                    <button type="submit" id="optimizeBtn" class="btn btn-primary">
                         <i class="fa-solid fa-bolt"></i> Optimizēt visus attēlus
                     </button>
                 </form>
