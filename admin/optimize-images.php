@@ -44,8 +44,29 @@ $allFiles = getAllImages($mediaDir);
 if (isset($_POST['optimize_all'])) {
     $debug[] = "Starting optimization...";
     $debug[] = "Media directory: $mediaDir";
+    $debug[] = "Directory exists: " . (is_dir($mediaDir) ? 'Yes' : 'NO');
     $debug[] = "GD available: " . (extension_loaded('gd') ? 'Yes' : 'No');
-    $debug[] = "Found " . count($allFiles) . " images total.";
+    $debug[] = "Files found by getAllImages: " . count($allFiles);
+
+    $allEntries = @scandir($mediaDir);
+    if ($allEntries) {
+        $debug[] = "scandir total entries: " . count($allEntries);
+        $heroFiles = array_filter($allEntries, function($e) { return strpos($e, 'hero-') === 0; });
+        $missisFiles = array_filter($allEntries, function($e) { return strpos($e, 'missis-') === 0; });
+        $blogFiles = array_filter($allEntries, function($e) { return strpos($e, 'blog-') === 0; });
+        $debug[] = "hero-* files in dir: " . count($heroFiles);
+        $debug[] = "missis-* files in dir: " . count($missisFiles);
+        $debug[] = "blog-* files in dir: " . count($blogFiles);
+        if (!empty($heroFiles)) {
+            $sample = array_slice(array_values($heroFiles), 0, 3);
+            foreach ($sample as $s) {
+                $full = $mediaDir . '/' . $s;
+                $debug[] = "  $s -> exists:" . (file_exists($full) ? 'Y' : 'N') . " readable:" . (is_readable($full) ? 'Y' : 'N') . " size:" . filesize($full);
+            }
+        }
+    } else {
+        $debug[] = "scandir FAILED";
+    }
 
     foreach ($allFiles as $file) {
         $before = filesize($file);
@@ -130,6 +151,64 @@ if (isset($_POST['optimize_all'])) {
             <?php endif; ?>
         </div>
 
+        <?php
+        require_once __DIR__ . '/inc/config.php';
+        $dbPaths = array();
+        foreach (array('hero_images', 'missis_images') as $bk) {
+            $rows = $supabase->select('content_blocks', array('page' => 'eq.index', 'block_key' => 'eq.' . $bk, 'select' => 'block_value'));
+            if ($rows && !isset($rows['error']) && count($rows) > 0) {
+                $decoded = json_decode($rows[0]['block_value'], true);
+                if (is_array($decoded)) $dbPaths = array_merge($dbPaths, $decoded);
+            }
+        }
+        ?>
+        <div class="card" style="margin-top:24px">
+            <h2><i class="fa-solid fa-database"></i> DB attēlu ceļi vs failsistēma</h2>
+            <p style="color:var(--text-muted); margin-bottom:16px">Attēli, kas reģistrēti Supabase datubāzē, un vai tie eksistē servera /media/ mapē.</p>
+            <?php if (empty($dbPaths)): ?>
+                <p style="color:var(--text-muted)">Nav atrasti nekādi attēlu ceļi datubāzē.</p>
+            <?php else: ?>
+                <table style="width:100%; border-collapse:collapse">
+                    <thead>
+                        <tr>
+                            <th style="text-align:left; padding:8px; border-bottom:2px solid var(--border)">Ceļš (DB)</th>
+                            <th style="text-align:center; padding:8px; border-bottom:2px solid var(--border)">Eksistē?</th>
+                            <th style="text-align:right; padding:8px; border-bottom:2px solid var(--border)">Lielums</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php
+                        $dbMissing = 0;
+                        $dbFound = 0;
+                        foreach ($dbPaths as $p):
+                            $fullPath = __DIR__ . '/../' . $p;
+                            $exists = file_exists($fullPath);
+                            if ($exists) { $dbFound++; } else { $dbMissing++; }
+                        ?>
+                        <tr>
+                            <td style="padding:6px 8px; border-bottom:1px solid var(--border); font-size:13px; font-family:monospace"><?= htmlspecialchars($p) ?></td>
+                            <td style="padding:6px 8px; border-bottom:1px solid var(--border); text-align:center; font-size:13px">
+                                <?php if ($exists): ?>
+                                    <span style="color:#28a745"><i class="fa-solid fa-check"></i></span>
+                                <?php else: ?>
+                                    <span style="color:#dc3545"><i class="fa-solid fa-xmark"></i></span>
+                                <?php endif; ?>
+                            </td>
+                            <td style="padding:6px 8px; border-bottom:1px solid var(--border); text-align:right; font-size:13px"><?= $exists ? formatSize(filesize($fullPath)) : '-' ?></td>
+                        </tr>
+                        <?php endforeach; ?>
+                        <tr>
+                            <td colspan="3" style="padding:8px; border-top:2px solid var(--border); font-size:13px">
+                                <strong>Kopā:</strong> <?= count($dbPaths) ?> ceļi |
+                                <span style="color:#28a745"><?= $dbFound ?> eksistē</span> |
+                                <span style="color:#dc3545"><?= $dbMissing ?> trūkst</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            <?php endif; ?>
+        </div>
+
         <div class="card" style="margin-top:24px">
             <h2><i class="fa-solid fa-bolt"></i> Attēlu optimizēšana</h2>
             <p style="color:var(--text-muted); margin-bottom:20px">Samazina attēlu izmērus un pārvērš uz WebP formātu.</p>
@@ -147,8 +226,8 @@ if (isset($_POST['optimize_all'])) {
             <?php endif; ?>
 
             <?php if (!empty($debug)): ?>
-                <div style="margin-bottom:20px; padding:12px; background:#eee; border-radius:var(--radius); font-family:monospace; font-size:12px; white-space:pre-wrap">
-                    <?= implode("\n", $debug) ?>
+                <div style="margin-bottom:20px; padding:12px; background:#1a1a1a; border-radius:var(--radius); font-family:monospace; font-size:12px; white-space:pre-wrap; color:#0f0; line-height:1.6">
+                    <?= htmlspecialchars(implode("\n", $debug)) ?>
                 </div>
             <?php endif; ?>
 
