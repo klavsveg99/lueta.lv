@@ -52,15 +52,38 @@ if (isset($_POST['download_missing'])) {
             if (is_array($decoded)) $allDbPaths = array_merge($allDbPaths, $decoded);
         }
     }
+
+    $deleted = 0;
+    foreach ($allDbPaths as $p) {
+        $fp = $mediaDir . '/' . basename($p);
+        if (file_exists($fp) && filesize($fp) === 0) {
+            unlink($fp);
+            $deleted++;
+        }
+    }
+    if ($deleted > 0) $downloadResults[] = array('path' => "Cleaned $deleted empty files", 'status' => 'ok', 'size' => 0);
+
     foreach ($allDbPaths as $p) {
         $fullPath = $mediaDir . '/' . basename($p);
-        if (file_exists($fullPath)) {
+        if (file_exists($fullPath) && filesize($fullPath) > 0) {
             $downloadResults[] = array('path' => $p, 'status' => 'exists', 'size' => filesize($fullPath));
             continue;
         }
         $url = 'https://lueta.lv/' . $p;
-        if (@file_put_contents($fullPath, @file_get_contents($url))) {
-            $downloadResults[] = array('path' => $p, 'status' => 'ok', 'size' => filesize($fullPath));
+        $data = false;
+        if (function_exists('curl_init')) {
+            $ch = curl_init($url);
+            curl_setopt_array($ch, array(CURLOPT_RETURNTRANSFER => true, CURLOPT_FOLLOWLOCATION => true, CURLOPT_TIMEOUT => 30, CURLOPT_SSL_VERIFYPEER => false));
+            $data = curl_exec($ch);
+            $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+            if ($code < 200 || $code >= 300) $data = false;
+        } else {
+            $data = @file_get_contents($url);
+        }
+        if ($data !== false && strlen($data) > 100) {
+            file_put_contents($fullPath, $data);
+            $downloadResults[] = array('path' => $p, 'status' => 'ok', 'size' => strlen($data));
         } else {
             $downloadResults[] = array('path' => $p, 'status' => 'fail', 'size' => 0);
         }
