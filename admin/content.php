@@ -131,7 +131,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'uploa
             $fileArray[] = $files;
         }
 
-        $uploadDir = __DIR__ . '/../media';
+        $uploadDir = __DIR__ . '/../../media';
         if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
 
         $blockKey = $section . '_images';
@@ -438,7 +438,7 @@ $page_title = 'Satura redaktors';
                 <div class="gallery-grid" id="heroGallery">
                     <?php foreach ($heroImages as $idx => $path): ?>
                         <div class="gallery-item" data-path="<?= htmlspecialchars($path) ?>">
-                            <img src="/<?= htmlspecialchars($path) ?>" alt="">
+                            <img src="/media.php?f=<?= urlencode(basename($path)) ?>" alt="">
                             <button type="button" class="gallery-delete" onclick="deleteImage('hero', <?= $idx ?>)"><i class="fa-solid fa-xmark"></i></button>
                         </div>
                     <?php endforeach; ?>
@@ -456,7 +456,7 @@ $page_title = 'Satura redaktors';
                 <div class="gallery-grid" id="missisGallery">
                     <?php foreach ($missisImages as $idx => $path): ?>
                         <div class="gallery-item" data-path="<?= htmlspecialchars($path) ?>">
-                            <img src="/<?= htmlspecialchars($path) ?>" alt="">
+                            <img src="/media.php?f=<?= urlencode(basename($path)) ?>" alt="">
                             <button type="button" class="gallery-delete" onclick="deleteImage('missis', <?= $idx ?>)"><i class="fa-solid fa-xmark"></i></button>
                         </div>
                     <?php endforeach; ?>

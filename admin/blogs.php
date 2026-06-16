@@ -51,7 +51,7 @@ try {
                 $ext = strtolower(pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION));
                 if (in_array($ext, array('jpg', 'jpeg', 'png', 'webp', 'gif'))) {
                     $filename = 'blog-feat-' . time() . '-' . substr(md5(mt_rand()), 0, 8) . '.' . $ext;
-                    $dest = __DIR__ . '/../media/' . $filename;
+                    $dest = __DIR__ . '/../../media/' . $filename;
                     if (move_uploaded_file($_FILES['image']['tmp_name'], $dest)) {
                         $optimized = optimizeImage($dest);
                         if ($optimized && $optimized !== $dest) { $filename = basename($optimized); }
@@ -69,11 +69,11 @@ try {
                 $ext = strtolower(pathinfo($_FILES['file']['name'], PATHINFO_EXTENSION));
                 if (in_array($ext, array('jpg', 'jpeg', 'png', 'webp', 'gif'))) {
                     $filename = 'blog-img-' . time() . '-' . substr(md5(mt_rand()), 0, 8) . '.' . $ext;
-                    $dest = __DIR__ . '/../media/' . $filename;
+                    $dest = __DIR__ . '/../../media/' . $filename;
                     if (move_uploaded_file($_FILES['file']['tmp_name'], $dest)) {
                         $optimized = optimizeImage($dest);
                         if ($optimized && $optimized !== $dest) { $filename = basename($optimized); }
-                        echo json_encode(array('url' => '/media/' . $filename));
+                        echo json_encode(array('url' => '/media.php?f=' . urlencode($filename)));
                         exit;
                     }
                 }
@@ -144,7 +144,7 @@ $page_title = ($lang === 'en') ? 'Jaunumi (EN)' : 'Jaunumi (LV)';
                 <?php foreach ($blogs as $blog): ?>
                     <div class="card" style="display:flex;gap:16px;padding:16px;align-items:center;margin-bottom:12px">
                         <?php if (!empty($blog['featured_image'])): ?>
-                            <img src="/<?= htmlspecialchars($blog['featured_image']) ?>" alt="" style="width:80px;height:80px;object-fit:cover;border-radius:var(--radius)">
+                            <img src="/media.php?f=<?= urlencode(basename($blog['featured_image'])) ?>" alt="" style="width:80px;height:80px;object-fit:cover;border-radius:var(--radius)">
                         <?php else: ?>
                             <div style="width:80px;height:80px;border-radius:var(--radius);background:var(--bg3);display:flex;align-items:center;justify-content:center;color:var(--text-muted)"><i class="fa-solid fa-image"></i></div>
                         <?php endif; ?>
