@@ -419,6 +419,9 @@ $page_title = 'Satura redaktors';
                                 <?php else: ?>
                                     <input type="<?= $def['type'] === 'number' ? 'number' : 'text' ?>" id="<?= $key ?>" name="<?= $key ?>" value="<?= htmlspecialchars($current) ?>" placeholder="<?= htmlspecialchars($ph) ?>">
                                 <?php endif; ?>
+                                <?php if (!empty($def['hint'])): ?>
+                                    <small style="color:var(--text-muted);font-size:12px;margin-top:4px;display:block"><?= htmlspecialchars($def['hint']) ?></small>
+                                <?php endif; ?>
                             </div>
                         <?php endif; ?>
                     <?php endforeach; ?>

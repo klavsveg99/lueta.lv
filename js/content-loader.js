@@ -447,6 +447,11 @@
     domReady(function () {
       window.cmsBlocks = blocks;
       if (blocks && Object.keys(blocks).length) applyBlocks(blocks);
+      var missisCta = document.getElementById('missisCta');
+      if (missisCta && blocks && blocks.missis_url) {
+        missisCta.href = blocks.missis_url;
+        missisCta.style.display = '';
+      }
       if (services && services.length) { renderServices(services); observeReveals(); }
       if (testimonials && testimonials.length) { renderTestimonials(testimonials); observeReveals(); }
       if (experiences && experiences.length) { renderExperiences(experiences); observeReveals(); }
