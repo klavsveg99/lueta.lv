@@ -161,3 +161,6 @@ code{background:var(--bg3);padding:2px 6px;border-radius:4px;font-size:13px}
 /* Icon select dropdown */
 .icon-select{width:100%;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:14px;font-family:var(--font);cursor:pointer}
 .icon-select:focus{outline:none;border-color:var(--accent)}
+
+.card:has(.gallery-grid) .form-group{margin-bottom:0}
+.card:has(.gallery-grid) .form-row{align-items:flex-end}
