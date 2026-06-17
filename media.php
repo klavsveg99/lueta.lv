@@ -1,5 +1,4 @@
 <?php
-$mediaDir = __DIR__ . '/../media';
 $file = $_GET['f'] ?? '';
 
 if (!$file || strpos($file, '/') !== false || strpos($file, '..') !== false) {
@@ -7,8 +6,14 @@ if (!$file || strpos($file, '/') !== false || strpos($file, '..') !== false) {
     exit('Invalid filename');
 }
 
-$path = $mediaDir . '/' . $file;
-if (!file_exists($path) || !is_file($path)) {
+$dirs = array(__DIR__ . '/../media', __DIR__ . '/media');
+$path = null;
+foreach ($dirs as $dir) {
+    $candidate = $dir . '/' . $file;
+    if (file_exists($candidate) && is_file($candidate)) { $path = $candidate; break; }
+}
+
+if (!$path) {
     http_response_code(404);
     exit('Not found');
 }
