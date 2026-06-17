@@ -54,7 +54,7 @@ try {
                     $dest = __DIR__ . '/../../media/' . $filename;
                     if (move_uploaded_file($_FILES['image']['tmp_name'], $dest)) {
                         $optimized = optimizeImage($dest);
-                        if ($optimized && $optimized !== $dest) { $filename = basename($optimized); }
+                        if ($optimized && $optimized !== 'skip' && $optimized !== $dest) { $filename = basename($optimized); }
                         echo json_encode(array('location' => 'media/' . $filename));
                         exit;
                     }
@@ -72,7 +72,7 @@ try {
                     $dest = __DIR__ . '/../../media/' . $filename;
                     if (move_uploaded_file($_FILES['file']['tmp_name'], $dest)) {
                         $optimized = optimizeImage($dest);
-                        if ($optimized && $optimized !== $dest) { $filename = basename($optimized); }
+                        if ($optimized && $optimized !== 'skip' && $optimized !== $dest) { $filename = basename($optimized); }
                         echo json_encode(array('url' => '/media.php?f=' . urlencode($filename)));
                         exit;
                     }

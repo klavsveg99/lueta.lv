@@ -152,7 +152,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'uploa
                 $dest = $uploadDir . '/' . $filename;
                 if (move_uploaded_file($file['tmp_name'], $dest)) {
                     $optimized = optimizeImage($dest);
-                    if ($optimized && $optimized !== $dest) {
+                    if ($optimized && $optimized !== 'skip' && $optimized !== $dest) {
                         $filename = basename($optimized);
                     }
                     $paths[] = 'media/' . $filename;
