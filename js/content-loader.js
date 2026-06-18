@@ -448,8 +448,8 @@
       window.cmsBlocks = blocks;
       if (blocks && Object.keys(blocks).length) applyBlocks(blocks);
       var missisCta = document.getElementById('missisCta');
-      if (missisCta && blocks && blocks.missis_url) {
-        missisCta.href = blocks.missis_url;
+      if (missisCta && blocks && blocks.missis_url && blocks.missis_url.trim()) {
+        missisCta.href = blocks.missis_url.trim();
         missisCta.style.display = '';
       }
       if (services && services.length) { renderServices(services); observeReveals(); }
