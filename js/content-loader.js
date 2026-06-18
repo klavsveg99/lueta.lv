@@ -445,12 +445,18 @@
     }
 
     domReady(function () {
+      var missisCta = document.getElementById('missisCta');
+      if (missisCta) missisCta.style.display = 'none';
+
       window.cmsBlocks = blocks;
       if (blocks && Object.keys(blocks).length) applyBlocks(blocks);
-      var missisCta = document.getElementById('missisCta');
-      if (missisCta && blocks && blocks.missis_url && blocks.missis_url.trim()) {
-        missisCta.href = blocks.missis_url.trim();
-        missisCta.style.display = '';
+      if (missisCta && blocks) {
+        var url = (blocks.missis_url || '').toString().trim();
+        console.log('missis_url:', url, 'type:', typeof blocks.missis_url);
+        if (url) {
+          missisCta.href = url;
+          missisCta.style.display = '';
+        }
       }
       if (services && services.length) { renderServices(services); observeReveals(); }
       if (testimonials && testimonials.length) { renderTestimonials(testimonials); observeReveals(); }
