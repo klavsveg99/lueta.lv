@@ -871,7 +871,7 @@ section { padding: 100px 48px; }
     background: var(--bg);
 }
 .sk-instagram-feed { background: transparent !important; }
-.tutorial_link.--custom-branding { display: none !important; }
+.tutorial_link[class*="custom-branding"] { display: none !important; }
 
 /* FOOTER */
 footer {
