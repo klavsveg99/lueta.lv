@@ -285,6 +285,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // BACK TO TOP
 const backToTopBtn = document.getElementById('backToTop');
+const whatsappBtn = document.getElementById('whatsappBtn');
 function updateBackToTop() {
     if (!backToTopBtn) return;
     const popupActive = contactPopup?.classList.contains('active');
@@ -292,8 +293,10 @@ function updateBackToTop() {
     const cookieModalActive = document.getElementById('cookieModal')?.classList.contains('show');
     if (window.scrollY > 300 && !popupActive && !modalActive && !cookieModalActive) {
         backToTopBtn.classList.add('visible');
+        if (whatsappBtn) whatsappBtn.classList.add('shifted');
     } else {
         backToTopBtn.classList.remove('visible');
+        if (whatsappBtn) whatsappBtn.classList.remove('shifted');
     }
 }
 window.addEventListener('scroll', updateBackToTop, { passive: true });
