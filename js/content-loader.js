@@ -450,9 +450,54 @@
 
       window.cmsBlocks = blocks;
       if (blocks && Object.keys(blocks).length) applyBlocks(blocks);
+
+      var phone = (blocks.contact_phone || '').toString().trim();
+      var email = (blocks.contact_email || '').toString().trim();
+      var phoneDigits = phone.replace(/\D/g, '');
+
+      if (phone) {
+        document.querySelectorAll('a[href^="tel:"]').forEach(function(a) {
+          a.href = 'tel:' + phoneDigits;
+        });
+        document.querySelectorAll('.nav-contact-link:not(.nav-whatsapp-link)').forEach(function(a) {
+          if (a.querySelector('.fa-phone')) {
+            var textNode = a.childNodes[a.childNodes.length - 1];
+            if (textNode && textNode.nodeType === 3) textNode.textContent = ' ' + phone;
+          }
+        });
+        document.querySelectorAll('.contact-link, .popup-contact-link').forEach(function(a) {
+          if (a.querySelector('.fa-phone')) {
+            a.href = 'tel:' + phoneDigits;
+            var textNode = a.childNodes[a.childNodes.length - 1];
+            if (textNode && textNode.nodeType === 3) textNode.textContent = '\n                            ' + phone + '\n                        ';
+          }
+        });
+      }
+
+      if (email) {
+        document.querySelectorAll('a[href^="mailto:"]').forEach(function(a) {
+          a.href = 'mailto:' + email;
+        });
+        document.querySelectorAll('.contact-link, .popup-contact-link').forEach(function(a) {
+          if (a.querySelector('.fa-envelope')) {
+            a.href = 'mailto:' + email;
+            var textNode = a.childNodes[a.childNodes.length - 1];
+            if (textNode && textNode.nodeType === 3) textNode.textContent = '\n                            ' + email + '\n                        ';
+          }
+        });
+      }
+
+      if (phoneDigits) {
+        var waUrl = 'https://wa.me/' + phoneDigits;
+        document.querySelectorAll('a[href*="wa.me"]').forEach(function(a) {
+          a.href = waUrl;
+        });
+        var waBtn = document.getElementById('whatsappBtn');
+        if (waBtn) waBtn.href = waUrl;
+      }
+
       if (missisCta && blocks) {
         var url = (blocks.missis_url || '').toString().trim();
-        console.log('missis_url:', url, 'type:', typeof blocks.missis_url);
         if (url) {
           missisCta.href = url;
           missisCta.style.display = '';
